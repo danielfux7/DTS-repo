@@ -39,7 +39,7 @@ if __name__ == '__main__':
             break
 
     # a. program 1.2V LDO reference selection mux to take lvr ref as reference voltage
-    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg32_inst.ldo1p2_ext_vref_sel = 0x0'
+    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg32_inst.ldo1p2_ext_vref_sel = 0x1'
     exec(command)
 
     # b. Program 1.2V LDO resistance divider correspondingly to take lvr ref of 0.93V as input reference voltage
@@ -55,11 +55,11 @@ if __name__ == '__main__':
     # d. Program ADC external reference mux to select lvr ref
     command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.adcdfxextvref = 0x0'
     exec(command)
-    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg4_inst.adc_vrefldo_ext_vref_sel = 1' #need to verify
+    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg15_inst.adcvrefsel=15' #need to verify
     exec(command)
 
     # e. Program vref_ldo output mux to select external reference as adc reference voltage
-    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg4_inst.adc_vrefldo_ext_vref_sel = 0x1'
+    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg4_inst.adc_vrefldo_ext_vref_sel = 1'
     exec(command)
 
     # f. Program ADC supply buffer to select external input reference voltage
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg32_inst.adc_supply_buf_out_sel = 0x1'
     exec(command)
 
-    # 2. config ADC
+    # 2. config ADC inputs
     command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg14_inst.adcvinsel0 = 3'
     exec(command)
     command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.anadfxinen = 3'
