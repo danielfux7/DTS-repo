@@ -38,7 +38,7 @@ if __name__ == '__main__':
             break
 
     # a. program 1.2V LDO reference selection mux to take lvr ref as reference voltage
-    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg32_inst.ldo1p2_ext_vref_sel = 0x0'
+    command = 'cpu.cdie.soc_cr_wrapper.' + name + '.inst0.dfvfreg32_inst.ldo1p2_ext_vref_sel = 0x1'
     exec(command)
 
     # b. Program 1.2V LDO resistance divider correspondingly to take lvr ref of 0.8V as input reference voltage
@@ -72,8 +72,71 @@ if __name__ == '__main__':
     command = 'cpu.cdie.taps.cdie_' + name +'.tapconfig.anadfxinen = 3'
     exec(command)
 
-    SumBGRCode = 0
-    AvgStep1Code = 0  #### TBD - insert the code from the register
+    # Select diode RD7 with ovrd and ovrd en (from test plan) not sure its needed .....
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.remote_diode_sel_ovr_en = 1'
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.remote_diode_sel_ovr_val = 0'
+    exec(command)
+
+    # Disable oneshot mode(from test plan) not sure its needed .....
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.oneshotmodeen = 0'
+    exec(command)
+
+    ## 3-6 Start trimming BG trim bits, took the recipe from test plan
+
+    # Set the BG Trim lower and higher limit codes via register ,the values are not make sense nee to check!! TBD
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.bgrtrimhighlimit = 30'
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.bgrtrimlowlimit = 5'
+    exec(command)
+
+    # Set the BG Trim start point such that vref_ldo output <0.9V. Update timer to wait for 4.6us for every BG code
+    # increment/decrement before starting ADC conversion. This gives enough time for analog to settle.
+    ## TBD how to to make sure there is a waiting time between the increment/decrement
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.bgrtrimrstval = 18'
+    exec(command)
+
+    # Enable BG Trim mode
+    command = 'cdie.taps.cdie_' + name + '.tapconfig.bgtrim_mode = 1'
+    exec(command)
+
+    # Enable DTS via registers
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenableovrd = 1'
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenable = 1'
+    exec(command)
+
+    # Keep polling the BGTRIM Done register till it becomes 1
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapstatus.bgtrim_done'
+    done = 0
+
+    while done == 0:
+        done = eval(command)
+        done = 1 # just for debug
+
+    # Read the values of BGTRIM FSM state and ensure that BGTRIM is completed without any error
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapstatus.bgtrimfsmstate'
+    BGTrimStateFsm = eval(command)
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapstatus.bgtrimerror'
+    error = eval(command)
+
+    print(BGTrimStateFsm)
+
+    if error == 1:
+        print('calib error')
+
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapstatus.bgtrimcode_calib'
+    BGTrimCalib = eval(command)
+    print('bgtrimcode calib:')
+    print(BGTrimCalib)
+
+    print('STEP2 finished')
+
+
+
+
+  #  SumBGRCode = 0
+   #AvgStep1Code = 0  #### TBD - insert the code from the register
     #command = '# TBD - how to configure to 10 bits code?'
     #exec(command)
 

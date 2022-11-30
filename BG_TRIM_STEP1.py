@@ -74,14 +74,35 @@ if __name__ == '__main__':
     command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.anadfxinen = 3'
     exec(command)
 
-    command = ''  # TBD - check wat is the command for getting bgrtirmcode
+    # Select diode RD7 with ovrd and ovrd en (from test plan) not sure its neede .....
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.remote_diode_sel_ovr_en = 1'
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.remote_diode_sel_ovr_val = 0'
+    exec(command)
+
+    # Enable DTS via registers (from test plan)  , not sure its neede .....
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenableovrd = 1'
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenable = 1'
+    exec(command)
+
+
+
+    # 4.For each reading/measurement, take average of few ADC codes, say 100 (to be determined from post
+    # silicon observations) to nullify noise (either internal device noise or external noise) impacts
     SumBGRCode = 0
-    # TBD - how to configure to 10 bits code?
+    command = 'cdie.taps.cdie_' + name + '.tapstatus.adcrawcode'
 
-    #for i in range(MeasurementsNum):
-        #SumBGRCode += eval(command)
+    for i in range(MeasurementsNum):
+        SumBGRCode += eval(command)
 
-    #AverageCode = SumBGRCode / MeasurementsNum  # In what register save the resualt? TBD
+    AverageCode = int(SumBGRCode / MeasurementsNum)
+
+    # 5.Save the code into a register. This forms the reference code.
+    # Typically, this 10-bit code should be ~848 (0.77/0.93 * 1024)
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.bgtrimtarget = AverageCode'
+    exec(command)
+
     print('finish step1')
 
 
