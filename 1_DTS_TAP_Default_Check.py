@@ -2,6 +2,7 @@
 # Description:
 # The function will will check TAPs on of the following strings:
 # dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1
+# The function will take
 
 
 import namednodes as _namednodes

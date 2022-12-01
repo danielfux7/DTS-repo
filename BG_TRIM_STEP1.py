@@ -74,19 +74,17 @@ if __name__ == '__main__':
     command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.anadfxinen = 3'
     exec(command)
 
-    # Select diode RD7 with ovrd and ovrd en (from test plan) not sure its neede .....
+    # Select diode RD7 with ovrd and ovrd en (from test plan) not sure its needed TBD
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.remote_diode_sel_ovr_en = 1'
     exec(command)
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.remote_diode_sel_ovr_val = 0'
     exec(command)
 
-    # Enable DTS via registers (from test plan)  , not sure its neede .....
+    # Enable DTS via registers (from test plan)  , not sure its needed TBD
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenableovrd = 1'
     exec(command)
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenable = 1'
     exec(command)
-
-
 
     # 4.For each reading/measurement, take average of few ADC codes, say 100 (to be determined from post
     # silicon observations) to nullify noise (either internal device noise or external noise) impacts
