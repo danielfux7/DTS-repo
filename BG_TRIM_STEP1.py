@@ -5,6 +5,7 @@
 
 
 import namednodes as _namednodes
+from config import *
 
 try:
     _sv = _namednodes.sv.get_manager(["socket"])
@@ -26,6 +27,7 @@ MeasurementsNum = 100
 if __name__ == '__main__':
     print('The function will get BG TRIM - STEP 1 on of the following DTSs:')
     print('dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1 \n')
+
     while 1:
         name = input('Choose the DTS for trim and write the name as showed above \n')
         print(name)
@@ -80,7 +82,7 @@ if __name__ == '__main__':
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.remote_diode_sel_ovr_val = 0'
     exec(command)
 
-    # Enable DTS via registers (from test plan)  , not sure its needed TBD
+    # Enable DTS via registers (from test plan)
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenableovrd = 1'
     exec(command)
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.dtsenable = 1'
@@ -98,9 +100,10 @@ if __name__ == '__main__':
 
     # 5.Save the code into a register. This forms the reference code.
     # Typically, this 10-bit code should be ~848 (0.77/0.93 * 1024)
-    command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.bgtrimtarget = AverageCode'
-    exec(command)
-
+    # command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.bgtrimtarget = AverageCode'
+    #exec(command)
+    Step1TrimValue = AverageCode
+    print('Step 1 Trim value is: ' + str(Step1TrimValue))
     print('finish step1')
 
 

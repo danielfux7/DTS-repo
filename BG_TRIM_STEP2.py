@@ -4,6 +4,7 @@
 # dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1
 
 import namednodes as _namednodes
+from config import *
 
 try:
     _sv = _namednodes.sv.get_manager(["socket"])
@@ -82,6 +83,10 @@ if __name__ == '__main__':
     command = 'cpu.cdie.taps.cdie_' + name + '.dtsfusecfg.oneshotmodeen = 0'
     exec(command)
 
+    # 2.Configure ADC to same mode as used in Step 1 (10-bit in this case)
+    command = 'cpu.cdie.taps.cdie_' + name + '.tapconfig.bgtrimtarget = Step1TrimValue'
+    exec(command)
+
     ## 3-6 Start trimming BG trim bits, took the recipe from test plan
 
     # Set the BG Trim lower and higher limit codes via register ,the values are not make sense nee to check!! TBD
@@ -125,10 +130,15 @@ if __name__ == '__main__':
     if error == 1:
         print('calib error')
 
+    SumBGTrimCalib =0
     command = 'cpu.cdie.taps.cdie_' + name + '.tapstatus.bgtrimcode_calib'
-    BGTrimCalib = eval(command)
+    for i in range(MeasurementsNum):
+        SumBGTrimCalib += eval(command)
+
+    AverageCode = int(SumBGTrimCalib / MeasurementsNum)
+    Step2TrimValue = AverageCode
     print('bgtrimcode calib:')
-    print(BGTrimCalib)
+    print(Step2TrimValue)
 
     print('STEP2 finished')
 
