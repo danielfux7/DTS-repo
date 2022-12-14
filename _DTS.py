@@ -1,4 +1,5 @@
 import namednodes as _namednodes
+import pandas as pd
 from config import *
 
 try:
@@ -52,11 +53,9 @@ def __init__(self):
 def method(self):
     print('check')
 
+
 ## BG TRIM STEP 1 ##
-# Description:
-# The function will get BG TRIM on of the following strings:
-# dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1
-def bg_trim_step1(self):
+def DTS_bg_trim_step1(self):
 
     print('Starting BG Trim Step 1 on:' + str(self.name))
 
@@ -128,10 +127,7 @@ def bg_trim_step1(self):
 
 
 ## BG TRIM STEP 2 ##
-# Description:
-# The function will get BG TRIM on of the following strings:
-# dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1
-def bg_trim_step2(self):
+def DTS_bg_trim_step2(self):
     print('Starting BG Trim Step 2 on:' + str(self.name))
 
     # a. program 1.2V LDO reference selection mux to take lvr ref as reference voltage
@@ -238,8 +234,58 @@ def bg_trim_step2(self):
 
     print('STEP2 finished')
 
+## Tap Defualt Check ##
+def DTS_TAP_Default_Check(self):  # test 1
+    print('In order to use this function, make sure to use xlsx/csv files only!')
+    print('The files should have 2 columns:')
+    print('The default values file contains the columns : "name" and "default_value" ')
+    print('The unit values file contains the columns : "name" and "unit_value" ')
+    defaultValuePath = input('insert the full path to the defaults values \n')
+    #print(defaultValuePath)
+    defaultData = pd.read_excel(defaultValuePath)
+    print('defaultData: ' + str(defaultData))
 
-def pretrim_rawcode_readout(self):  # test 5
+    defualtNames = list(defaultData.name)
+    defualtValues = list(defaultData.default_value)
+    defualtDict = {defualtNames[i]: defualtValues[i] for i in range(len(defualtNames))}
+    print('defualtDict: ' + str(defualtDict))
+
+    unitNames = defualtNames
+    unitValues = []
+
+    for i in range(len(unitNames)):
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.' + unitNames[i]
+        unitValues.append(eval(command))
+
+    unitDict = {unitNames[i]: unitValues[i] for i in range(len(defualtNames))}
+    print('unitDict: ' + str(unitDict))
+
+
+    # unitValuePath = input('insert the full path to the unit values \n')
+    # #print(unitValuePath)
+    # unitData = pd.read_excel(unitValuePath)
+    # print(unitData)
+
+
+
+
+
+## TAP Write Read Check ##
+def DTS_TAP_Write_Read_Check(self):  # test 2
+    pass
+
+
+## CRI Defualt Check ##
+def DTS_CRI_Default_Check(self):  # test 3
+    pass
+
+
+## CRI Write Read Check ##
+def DTS_CRI_Write_Read_check(self):  # test 4
+    pass
+
+## Pre Trim Rawcode Readout ##
+def DTS_pretrim_rawcode_readout(self):  # test 5
 
     print('Starting pre trim rawcode readout :' + str(self.name))
 
@@ -262,16 +308,16 @@ def pretrim_rawcode_readout(self):  # test 5
     exec(command)
 
 
-
-def posttrim_temp_readout(self):  # test 6
+## Post Trim Temp Readout ##
+def DTS_posttrim_temp_readout(self):  # test 6
     pass
 
-
-def cat_2point_autotrim_check(self):  # test 8
+## Cat 2 Points Auto Trim Check ##
+def DTS_cat_2point_autotrim_check(self):  # test 8
     pass
 
-
-def postcalib_catblk_trip_check(self):  # test 9
+## Post Calib Catblk Check ##
+def DTS_postcalib_catblk_trip_check(self):  # test 9
     pass
 
 
