@@ -1,5 +1,6 @@
 import namednodes as _namednodes
 import pandas as pd
+import numpy as np
 from config import *
 
 try:
@@ -14,7 +15,7 @@ except:
         "WARNING: Your PythonSV doesn't seem to have the cpu component loaded. Some scripts may fail due to this.")
 
 # Constants #
-ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0' , 'dts_ccf1', 'dts_gt0', 'dts_gt1']
+ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
 VinADC = 0.77
 VrefADC = 0.93
 MeasurementsNum = 100
@@ -29,6 +30,32 @@ DiodeNum = {
     "dts_gt0": 6,
     "dts_gt1": 6,
 }
+
+Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus']
+
+
+def create_new_path(old_path, tapNum, dtsName):
+    parser_path = old_path.split("\\")
+    parser_path[len(parser_path) -1] = Taps[int(tapNum)] + '_' + dtsName + '_out.xlsx'
+    new_path = parser_path[0] + '\\'
+    for i in range(len(parser_path)-2):
+        new_path += str(parser_path[i+1]) + '\\'
+    new_path += parser_path[len(parser_path)-1]
+    print(new_path)
+    return new_path
+
+def print_for_fuses():
+    print('In order to use this function, make sure to use xlsx/csv files only!')
+    print('The files should have 2 columns:')
+    print('The default values file contains the columns : "name" and "default_value" ')
+    print('The unit values file contains the columns : "name" and "unit_value" ')
+
+def get_number_for_tap():
+    tapNum = input('Choose the tap for checking \n 0 - dtsfusecfg \n 1 - tapconfig \n 2 - tapstatus \n ')
+    while int(tapNum) > 2:
+        print("Wrong Number, try again")
+        tapNum = input()
+    return tapNum
 
 
 def __init__(self):
@@ -236,43 +263,87 @@ def DTS_bg_trim_step2(self):
 
 ## Tap Defualt Check ##
 def DTS_TAP_Default_Check(self):  # test 1
+    dtsName = self.name
     print('In order to use this function, make sure to use xlsx/csv files only!')
     print('The files should have 2 columns:')
     print('The default values file contains the columns : "name" and "default_value" ')
     print('The unit values file contains the columns : "name" and "unit_value" ')
-    defaultValuePath = input('insert the full path to the defaults values \n')
-    #print(defaultValuePath)
+    tapNum = input('Choose the tap for checking \n 0 - dtsfusecfg \n 1 - tapconfig \n 2 - tapstatus \n ')
+    while int(tapNum) > 2:
+        print("Wrong Number, try again")
+        tapNum = input()
+
+    defaultValuePath = input('insert the full path to the defaults values \n') # C:\Users\daniel\default.xlsx
     defaultData = pd.read_excel(defaultValuePath)
-    print('defaultData: ' + str(defaultData))
+    # print('defaultData: ' + str(defaultData))
 
     defualtNames = list(defaultData.name)
     defualtValues = list(defaultData.default_value)
     defualtDict = {defualtNames[i]: defualtValues[i] for i in range(len(defualtNames))}
-    print('defualtDict: ' + str(defualtDict))
+    # print('defualtDict: ' + str(defualtDict))
 
     unitNames = defualtNames
     unitValues = []
 
     for i in range(len(unitNames)):
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.' + unitNames[i]
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.' + Taps[int(tapNum)] + '.' + unitNames[i]
         unitValues.append(eval(command))
 
-    unitDict = {unitNames[i]: unitValues[i] for i in range(len(defualtNames))}
-    print('unitDict: ' + str(unitDict))
+    #unitDict = {unitNames[i]: unitValues[i] for i in range(len(defualtNames))}
+    #print('unitDict: ' + str(unitDict))
 
+    unitDict = {'name': unitNames ,'unit_value': unitValues}
+    unitData = pd.DataFrame.from_dict(unitDict)
+    #print('unitDict: ' + str(unitDict))
+    print('defaultData:')
+    print(defaultData)
+    print('unitData:')
+    print(unitData)
 
+    finalData = defaultData.merge(unitData, how='left', on='name')
+    print('final:')
+    print(finalData)
+
+    # define conditions
+    conditions = [finalData['default_value'] == finalData['unit_value'],
+                  finalData['default_value'] != finalData['unit_value']]
+
+    # define choices
+    choices = ['True', 'False']
+
+    # create new column in DataFrame that displays results of comparisons
+    finalData['status'] = np.select(conditions, choices, default='Tie')
+
+    exportPath = create_new_path(defaultValuePath,tapNum, dtsName)
+    finalData.to_excel(exportPath)
+
+    print(finalData)
     # unitValuePath = input('insert the full path to the unit values \n')
     # #print(unitValuePath)
     # unitData = pd.read_excel(unitValuePath)
     # print(unitData)
 
 
+## Write Values to Tap Registers ##
+# Description: this function will insert values to Tap registers(dtsfusecfg,tapconfig,tapstatus)
+def DTS_write_values_func(self):
+    print_for_fuses()
+    tapNum = get_number_for_tap()
+    valuesPath = input('insert the full path to the file with the values  \n')  # C:\Users\daniel\default.xlsx
+    data = pd.read_excel(valuesPath)
 
+    dataNames = list(data.name)
+    dataValues = list(data.value)
+
+    for i in range(len(dataNames)):
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.' + Taps[int(tapNum)] + '.' + unitNames[i] + "=" + unit_value[i]
+        exec(command)
 
 
 ## TAP Write Read Check ##
 def DTS_TAP_Write_Read_Check(self):  # test 2
-    pass
+    DTS_write_values_func(self)
+    DTS_TAP_Default_Check(self)  # the input path will be the as we insert
 
 
 ## CRI Defualt Check ##
