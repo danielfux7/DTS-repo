@@ -2,36 +2,10 @@ import namednodes as _namednodes
 import pandas as pd
 import numpy as np
 from config import *
-
-try:
-    _sv = _namednodes.sv.get_manager(["socket"])
-except:
-    print("WARNING: Socket discovery failed to find any sockets")
-
-try:
-    cpu = _sv.socket.get_all()[0]
-except:
-    print(
-        "WARNING: Your PythonSV doesn't seem to have the cpu component loaded. Some scripts may fail due to this.")
-
-# Constants #
-ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
-VinADC = 0.77
-VrefADC = 0.93
-MeasurementsNum = 100
-
-DiodeNum = {
-    "dts0_aon": 1,
-    "dts1": 9,
-    "dts2": 9,
-    "dts3": 9,
-    "dts_ccf0": 2,
-    "dts_ccf1": 2,
-    "dts_gt0": 6,
-    "dts_gt1": 6,
-}
-
-Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus']
+import Asist_Func
+from Asist_Func import *
+import Diode
+from Diode import *
 
 
 def create_new_path(old_path, tapNum, dtsName):
@@ -75,6 +49,8 @@ def __init__(self):
 
     self.name = name
     self.NumOfDiode = DiodeNum[name]
+    for i in range(DiodeNum[name]):
+        self.diodesList.append(Diode(i))
 
 
 def method(self):
@@ -356,28 +332,50 @@ def DTS_CRI_Write_Read_check(self):  # test 4
     pass
 
 ## Pre Trim Rawcode Readout ##
-def DTS_pretrim_rawcode_readout(self):  # test 5
+def DTS_pretrim_rawcode_readout_particular_temp(self,temp):  # test 5
+    #  initialize arrays
+    minCodeArr = [0xffff] * self.NumOfDiode
+    maxCodeArr = [0] * self.NumOfDiode
+    validcodecheck = [True] * self.NumOfDiode
+    sumCodeArr = [0] * self.NumOfDiode
+    meanCodeArr = [0] * self.NumOfDiode
 
-    print('Starting pre trim rawcode readout :' + str(self.name))
+    print('Starting pre trim rawcode readout : ' + str(self.name))
+    Asist_Func.all_dts_disable()
+    Asist_Func.program_bg_code(self) # Program the BG code obtained from Step 2
+    for measNum in range(MeasurementsNum):
+        for diode in range(int(self.NumOfDiode)):
+            Asist_Func.update_diode_mask(self, int(diode))  # Update diode mask
+            Asist_Func.oneshot_disable(self)  # Disable oneshot mode
+            Asist_Func.dts_enable(self) # enable DTS via registers
 
-    # Program the BG code obtained from the test "BGR_CALIB_STEP2" into the DTS IP
-    command = 'cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode = Step2TrimValue'
-    exec(command)
+            #if Asist_Func.valid_diode_check(self, diode):  # check if diode exist and valid
+            if True:  ####### for debug
+                rawCode = Asist_Func.rawcode_read(self, diode)  # read the raw code per some temp and update data
+                sumCodeArr[diode] += rawCode
+                if minCodeArr[diode] > rawCode:
+                    minCodeArr[diode] = rawCode
+                if maxCodeArr[diode] < rawCode:
+                    maxCodeArr[diode] = rawCode
 
-    # Update diode mask to select all the diodes that were calibrated and needed for temperature measurement (RD0 to  RD16)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask = 0x1'
-    exec(command)
+            else:
+                validcodecheck[diode] = False
+            Asist_Func.dts_disable(self)  # disable DTS via registers
+    print('debug check 1')
 
-    # Disable oneshot mode
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.oneshotmodeen = 0x0'
-    exec(command)
+    # Do the avg calc and Store the date in the right diode:
+    for i in range(self.NumOfDiode):
+        # if validcodecheck[i]:
+        if True:  ########## for debug:
+            meanCodeArr[i] = sumCodeArr[i] / MeasurementsNum
+            diodeData = [temp,  meanCodeArr[i], minCodeArr[i], maxCodeArr[i]]
+            self.diodesList[i].pretrimData.append(diodeData)
+        else:
+            meanCodeArr[i] = 'invalid diode'
+            self.diodesList[i].valid = False
 
-    # Enable DTS via registers
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenableovrd = 1'
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenable = 1'
-    exec(command)
 
+    print('finish pre trim temp')
 
 ## Post Trim Temp Readout ##
 def DTS_posttrim_temp_readout(self):  # test 6

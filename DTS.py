@@ -4,6 +4,7 @@ from config import *
 import _DTS
 from _DTS import *
 
+
 class DTS:
     # Variables
     name = "dts"
@@ -11,6 +12,8 @@ class DTS:
     Step1TrimValue = -1
     Step2TrimValue = -1
     NumOfDiode = -1
+    diodesList = []
+
 
     # methods
     def __init__(self):
@@ -55,8 +58,8 @@ class DTS:
 
     ## Pre Trim Rawcode Readout ##
     # Description:
-    def pretrim_rawcode_readout(self):  # test 5
-        _DTS.DTS_pretrim_rawcode_readout(self)
+    def pretrim_rawcode_readout(self, temp):  # test 5
+        _DTS.DTS_pretrim_rawcode_readout_particular_temp(self, temp)
 
     ## Post Trim Temp Readout ##
     # Description:
