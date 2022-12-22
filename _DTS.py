@@ -1,7 +1,3 @@
-import namednodes as _namednodes
-import pandas as pd
-import numpy as np
-from config import *
 import Asist_Func
 from Asist_Func import *
 import Diode
@@ -351,7 +347,7 @@ def DTS_pretrim_rawcode_readout_particular_temp(self,temp):  # test 5
 
             #if Asist_Func.valid_diode_check(self, diode):  # check if diode exist and valid
             if True:  ####### for debug
-                rawCode = Asist_Func.rawcode_read(self, diode)  # read the raw code per some temp and update data
+                rawCode = Asist_Func.rawcode_read(self)  # read the raw code per some temp and update data
                 sumCodeArr[diode] += rawCode
                 if minCodeArr[diode] > rawCode:
                     minCodeArr[diode] = rawCode
@@ -376,6 +372,20 @@ def DTS_pretrim_rawcode_readout_particular_temp(self,temp):  # test 5
 
 
     print('finish pre trim temp')
+
+## Trim the diodea ##
+def DTS_trim_rawcode(self):
+    for diode in range(self.NumOfDiode):
+        if self.diodesList[diode].valid:
+            temperatures = [item[0] for item in self.diodesList[diode].pretrimData]
+            rawcodes = [item[1] for item in self.diodesList[diode].pretrimData]
+            coefficients = np.polyfit(rawcodes, temperatures, 1)
+            slope = round(coefficients[0])
+            offset = round(coefficients[1])
+            print('slope: ' + str(slope))
+            print('offset: ' + str(offset))
+            insert_slope_offset_to_diode(self, diode, slope, offset)
+
 
 ## Post Trim Temp Readout ##
 def DTS_posttrim_temp_readout(self):  # test 6

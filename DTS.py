@@ -61,6 +61,11 @@ class DTS:
     def pretrim_rawcode_readout(self, temp):  # test 5
         _DTS.DTS_pretrim_rawcode_readout_particular_temp(self, temp)
 
+    ## Trim the diodea ##
+    ## Description:
+    def DTS_trim_rawcode(self):
+        _DTS.DTS_trim_rawcode(self)
+
     ## Post Trim Temp Readout ##
     # Description:
     def posttrim_temp_readout(self):  # test 6

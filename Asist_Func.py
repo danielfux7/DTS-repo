@@ -16,6 +16,8 @@ except:
 
 # Constants #
 ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
+OSRmodes = ['256_avgen', '512_avgen', '512_avgen', '1024_avgen', '2048_avgen',
+            '256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis']
 VinADC = 0.77
 VrefADC = 0.93
 MeasurementsNum = 5
@@ -71,6 +73,7 @@ def all_dts_disable():
         command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 0'
         exec(command)
 
+
 def all_dts_enable():
     for dts in ListDTS:
         command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
@@ -78,12 +81,23 @@ def all_dts_enable():
         command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 1'
         exec(command)
 
+
 def valid_diode_check(self, diode):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperaturevalid_' + str(diode)
     valid = eval(command)
     return int(valid)
 
-def rawcode_read(self,diode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperature_' + str(diode)
+
+def rawcode_read(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.adcrawcode'
     rawcode = eval(command)
     return int(rawcode)
+
+
+def insert_slope_offset_to_diode(self, diode, slope, offset):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset)
+    exec(command)
+    self.diodesList[diode].slope = slope
+    self.diodesList[diode].offset = offset
