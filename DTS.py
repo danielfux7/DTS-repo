@@ -68,8 +68,8 @@ class DTS:
 
     ## Post Trim Temp Readout ##
     # Description:
-    def posttrim_temp_readout(self):  # test 6
-        _DTS.DTS_posttrim_temp_readout(self)
+    def posttrim_temp_readout(self, temperature):  # test 6
+        _DTS.DTS_posttrim_temp_readout(self, temperature)
 
     ## Cat 2 Points Auto Trim Check ##
     # Description:

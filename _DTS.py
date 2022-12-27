@@ -338,12 +338,13 @@ def DTS_pretrim_rawcode_readout_particular_temp(self,temp):  # test 5
 
     print('Starting pre trim rawcode readout : ' + str(self.name))
     Asist_Func.all_dts_disable()
-    Asist_Func.program_bg_code(self) # Program the BG code obtained from Step 2
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     for measNum in range(MeasurementsNum):
+
         for diode in range(int(self.NumOfDiode)):
             Asist_Func.update_diode_mask(self, int(diode))  # Update diode mask
             Asist_Func.oneshot_disable(self)  # Disable oneshot mode
-            Asist_Func.dts_enable(self) # enable DTS via registers
+            Asist_Func.dts_enable(self)  # enable DTS via registers
 
             #if Asist_Func.valid_diode_check(self, diode):  # check if diode exist and valid
             if True:  ####### for debug
@@ -388,12 +389,56 @@ def DTS_trim_rawcode(self):
 
 
 ## Post Trim Temp Readout ##
-def DTS_posttrim_temp_readout(self):  # test 6
-    pass
+def DTS_posttrim_temp_readout(self, temperature):  # test 6
+    Asist_Func.all_dts_disable()  # First disable all the DTS
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    Asist_Func.update_chosen_mask(self, 0xffff)  # update the mask to select all the calibrated dioides
+    for i in range(OSRmodesNum):
+        avgen = int(i / 4)
+        mode = i % 4
+        Asist_Func.update_osr_mode(self, avgen, mode)
+        Asist_Func.dts_enable(self)  # Enable DTS
+        curr = []
+        for diode in range(self.NumOfDiode):
+            #if Asist_Func.valid_diode_check(self, diode):
+                rawcode = Asist_Func.read_temperature_code(self, diode)
+                measTemperature = self.diodesList[diode].slope * rawcode_read(self) + self.diodesList[diode].offset
+                tempError = temperature - measTemperature
+                curr = [temperature, measTemperature, tempError]
+                self.diodesList[diode].posttrimData[OSRmodes[i]].append(curr)
+        Asist_Func.dts_disable(self)
+    Asist_Func.all_dts_disable()
+    print('sinish post trim readout')
+
+## Cat auto trim Check ##
+def DTS_cat_autotrim_check(self, temperature):  # test 7
+    Asist_Func.all_dts_disable()  # First disable all the DTS
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    Asist_Func.diode_sel_ovr_en(self)
+    Asist_Func.diode_sel_ovr_val(self)
+    Asist_Func.program_digital_viewpin_o_digital_1(self, oxd)  # I think it should be before the dts enable
+    Asist_Func.dts_enable(self)
+    Asist_Func.cat_alert_clear(self)
+    Asist_Func.reset_cattrip_fsm(self)
+    Asist_Func.enable_dts_cattrip_auto_trim_fsm(self)
+    Asist_Func.release_cattrip_fsm_reset(self)
+
+    while true:
+        fsmCurrState = Asist_Func.read_cattrip_fsm_state(self)
+        if fsmCurrState == 3:
+            break
+    curr = []
+    for diode in range(self.NumOfDiode):
+        trimcode = Asist_Func.read_cattripcode_out(self,diode)
+        curr = [temperature , trimcode]
+        self.diodesList[diode].catAutoTrimData..append(curr)
+
+
 
 ## Cat 2 Points Auto Trim Check ##
 def DTS_cat_2point_autotrim_check(self):  # test 8
-    pass
+    Asist_Func.all_dts_disable()  # First disable all the DTS
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
 
 ## Post Calib Catblk Check ##
 def DTS_postcalib_catblk_trip_check(self):  # test 9

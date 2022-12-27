@@ -16,8 +16,10 @@ except:
 
 # Constants #
 ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
-OSRmodes = ['256_avgen', '512_avgen', '512_avgen', '1024_avgen', '2048_avgen',
-            '256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis']
+OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
+            '256_avgen', '512_avgen', '1024_avgen', '2048_avgen']
+
+OSRmodesNum = 8
 VinADC = 0.77
 VrefADC = 0.93
 MeasurementsNum = 5
@@ -35,6 +37,9 @@ DiodeNum = {
 
 Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus']
 
+def update_chosen_mask(self, mask):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask =' + str(mask)
+    exec(command)
 
 def update_diode_mask(self, diodeNum):
     diodeMask = pow(2, diodeNum)
@@ -101,3 +106,61 @@ def insert_slope_offset_to_diode(self, diode, slope, offset):
     exec(command)
     self.diodesList[diode].slope = slope
     self.diodesList[diode].offset = offset
+
+
+def update_osr_mode(self, avgen, mode):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_avgen=' + str(avgen)
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.osr=' + str(mode)
+    exec(command)
+
+def read_temperature_code(self, diode):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperature_' + str(diode)
+    tempCode = eval(command)
+    return int(tempCode)
+
+def diode_sel_ovr_en(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_en=1'
+    exec(command)
+
+def diode_sel_ovr_val(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_val=' + str(self.NumOfDiode)
+    exec(command)
+
+
+def cat_alert_clear(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cat_alert_clr=1'
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cat_alert_clr=0'
+    exec(command)
+
+def reset_cattrip_fsm(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=1'
+    exec(command)
+
+def release_cattrip_fsm_reset(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=0'
+    exec(command)
+
+def enable_dts_cattrip_auto_trim_fsm(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen=1'
+    exec(command)
+
+def program_digital_viewpin_o_digital_0(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel0=' + str(selector)
+    exec(command)
+
+def program_digital_viewpin_o_digital_1(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel1=' + str(selector)
+    exec(command)
+
+def read_cattrip_fsm_state(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripfsmstate'
+    cattripFsmState = eval(command)
+    return int(cattripFsmState)
+
+def read_cattripcode_out(sel,diode):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_out_=' + str(diode)
+    cattripCode = eval(command)
+    return int(cattripCode)
+
