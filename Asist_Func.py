@@ -99,6 +99,28 @@ def rawcode_read(self):
     return int(rawcode)
 
 
+def calculate_slope_and_offset(x, y):
+    coefficients = np.polyfit(x, y, 1)
+    slope = round(coefficients[0])
+    offset = round(coefficients[1])
+    return slope, offset
+
+
+def insert_cat_slope_offset_to_diode(self, diode, slope, offset):
+    self.diodesList[diode].catSlope = slope
+    self.diodesList[diode].catOffset = offset
+
+
+def convert_temperature_to_rawcode(temperature, slope, offset):
+        rawcode = round((temperature - offset) / slope)
+        return rawcode
+
+
+def insert_cattrip_code(self, cattripcode, diode):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cattripcode_' + str(diode) + '=' + str(cattripcode)
+    exec(command)
+
+
 def insert_slope_offset_to_diode(self, diode, slope, offset):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
     exec(command)
@@ -123,8 +145,8 @@ def diode_sel_ovr_en(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_en=1'
     exec(command)
 
-def diode_sel_ovr_val(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_val=' + str(self.NumOfDiode)
+def diode_sel_ovr_val(self, diode):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_val=' + str(diode)
     exec(command)
 
 
@@ -159,8 +181,19 @@ def read_cattrip_fsm_state(self):
     cattripFsmState = eval(command)
     return int(cattripFsmState)
 
-def read_cattripcode_out(sel,diode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_out_=' + str(diode)
+def read_cattripcode_out(self,diode):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_out_' + str(diode)
     cattripCode = eval(command)
     return int(cattripCode)
+
+def enable_trim_neg_temperature(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen_negtemp=1'
+    exec(command)
+
+
+def cattrip_alert(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattrip_alert'
+    cattripAllert = eval(command)
+    return int(cattripAllert)
+
 

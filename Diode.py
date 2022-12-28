@@ -6,8 +6,12 @@ class Diode:
     valid = True
     slope = -1
     offset = -1
+    catSlope = -1
+    catOffset = -1
     posttrimData = {}
     catAutoTrimData = []
+    cat2PointsTrimData = []
+    postCalibData = {}
 
     def __init__(self, diodeNum):
         self.diodeNum = diodeNum
@@ -21,3 +25,10 @@ class Diode:
             '1024_avgen': [],
             '2048_avgen': [],
         }
+        self.pretrimData = []
+        self.catAutoTrimData = []
+        self.cat2PointsTrimData = []
+        self.postCalibData = {}
+
+
+

@@ -71,15 +71,31 @@ class DTS:
     def posttrim_temp_readout(self, temperature):  # test 6
         _DTS.DTS_posttrim_temp_readout(self, temperature)
 
+    ## cat autotrim check ##
+    # Description:
+    def DTS_cat_autotrim_check(self, temperature):  # test 7
+        _DTS.DTS_cat_autotrim_check(self, temperature)
+
     ## Cat 2 Points Auto Trim Check ##
     # Description:
-    def cat_2point_autotrim_check(self):  # test 8
-        _DTS.DTS_cat_2point_autotrim_check(self)
+    def cat_2point_autotrim_check(self, temperature):  # test 8
+        _DTS.DTS_cat_2point_autotrim_check(self, temperature)
+
+    ## Trim the diodea ##
+    ## Description:
+    def DTS_cat_trim_rawcode(self, cattrip_temperature):
+        _DTS.DTS_cat_trim_rawcode(self, cattrip_temperature)
 
     ## Post Calib Catblk Check ##
     # Description:
-    def postcalib_catblk_trip_check(self):  # test 9
-        _DTS.DTS_postcalib_catblk_trip_check(self)
+    def postcalib_catblk_trim_check(self, temperature, cattrip_temperature):  # test 9
+        _DTS.DTS_postcalib_catblk_trim_check(self, temperature, cattrip_temperature)
+
+    ## BG wait time check ##
+    # Description:
+    def BG_WAIT_TIME_CHECK(self):  # test 9
+        _DTS.BG_WAIT_TIME_CHECK(self)
+
 
 
 if __name__ == '__main__':
