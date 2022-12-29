@@ -136,6 +136,7 @@ def update_osr_mode(self, avgen, mode):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.osr=' + str(mode)
     exec(command)
 
+
 def read_temperature_code(self, diode):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperature_' + str(diode)
     tempCode = eval(command)
@@ -144,6 +145,7 @@ def read_temperature_code(self, diode):
 def diode_sel_ovr_en(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_en=1'
     exec(command)
+
 
 def diode_sel_ovr_val(self, diode):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_val=' + str(diode)
@@ -156,6 +158,7 @@ def cat_alert_clear(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cat_alert_clr=0'
     exec(command)
 
+
 def reset_cattrip_fsm(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=1'
     exec(command)
@@ -164,9 +167,11 @@ def release_cattrip_fsm_reset(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=0'
     exec(command)
 
+
 def enable_dts_cattrip_auto_trim_fsm(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen=1'
     exec(command)
+
 
 def program_digital_viewpin_o_digital_0(self, selector):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel0=' + str(selector)
@@ -176,15 +181,18 @@ def program_digital_viewpin_o_digital_1(self, selector):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel1=' + str(selector)
     exec(command)
 
+
 def read_cattrip_fsm_state(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripfsmstate'
     cattripFsmState = eval(command)
     return int(cattripFsmState)
 
+
 def read_cattripcode_out(self,diode):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_out_' + str(diode)
     cattripCode = eval(command)
     return int(cattripCode)
+
 
 def enable_trim_neg_temperature(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen_negtemp=1'
@@ -197,3 +205,73 @@ def cattrip_alert(self):
     return int(cattripAllert)
 
 
+def program_bg_wait(self, waitDelay):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrwaitdelay=' + str(waitDelay)
+    exec(command)
+
+
+def read_mean_max_min_rawcode_for_diode(self, readNum):
+    pass
+
+
+def program_sleep_timer(self, sleepTime):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.sleeptimer=' + str(sleepTime)
+    exec(command)
+
+
+def enable_dynamic_update(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.enable_dynamic_update=1'
+    exec(command)
+
+
+def disable_dynamic_update(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.enable_dynamic_update=0'
+    exec(command)
+
+
+def program_adc_clock_freq(self, freq):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsadcclkdiv=' + str(freq)
+    exec(command)
+
+
+def dithering_enable(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dithering_enable=1'
+    exec(command)
+
+
+def dithering_disable(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dithering_enable=0'
+    exec(command)
+
+
+def program_viewanasigsel(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewanasigsel=' + str(selector)
+    exec(command)
+
+
+def dtd_alert(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.dtd_alert'
+    dtdAllert = eval(command)
+    return int(dtdAllert)
+
+def dtd_ns_alert(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.dtd_ns_alert'
+    dtdnsAllert = eval(command)
+    return int(dtdnsAllert)
+
+
+def dtd_sticky_thr_high(self, highLimit):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_h=' + str(highLimit)
+    exec(command)
+
+
+def dtd_sticky_thr_low(self, lowLimit):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_l=' + str(lowLimit)
+    exec(command)
+
+
+def clear_sticky_alert(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtd_sticky_alert_clr=1'
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtd_sticky_alert_clr=0'
+    exec(command)

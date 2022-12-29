@@ -514,7 +514,68 @@ def DTS_postcalib_catblk_trim_check(self, temperature, cattrip_temperature):  # 
         Asist_Func.dts_disable(self)
 
 
-
 ## BG wait time check ##
-def BG_WAIT_TIME_CHECK(self):  # test 11
-    pass
+def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
+    Asist_Func.all_dts_disable()
+    Asist_Func.update_chosen_mask(self, 3)  # select at least 2 of the connected diodes
+    Asist_Func.oneshot_disable(self)
+    Asist_Func.program_bg_wait(self,waitDelay)
+    Asist_Func.program_digital_viewpin_o_digital_1(self, 0xb)
+    Asist_Func.dts_enable(self)
+    print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1]')
+    print('PASS - The duration b/w the falling an rising edge shall be equal to (waitDelay+1)*10ns')
+
+
+## BG wait code check ##
+def BG_WAIT_CODE_CHECK(self, waitDelay):  # test 12
+    print('do this test after pre trim ')
+    Asist_Func.all_dts_disable() ######################### not finished
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    Asist_Func.update_chosen_mask(self, 1)  # select at least 2 of the connected diodes
+    Asist_Func.oneshot_disable(self)
+    Asist_Func.dts_enable(self)
+
+
+    Asist_Func.program_bg_wait(self, waitDelay)
+    Asist_Func.program_digital_viewpin_o_digital_1(self, 0xb)
+    Asist_Func.dts_enable(self)
+
+
+## sleep delay check ##
+def SLEEP_DELAY_CHECK(self, sleepTime):  # test 12
+    Asist_Func.all_dts_disable()
+    Asist_Func.update_chosen_mask(self, 1)
+    Asist_Func.program_sleep_timer(self, sleepTime)
+    Asist_Func.program_digital_viewpin_o_digital_1(self, 0xc)
+    Asist_Func.dts_enable(self)
+    print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1]')
+    print('PASS - The duration b/w the falling an rising edge shall be equal to (sleepTime*2^12+1000)*10ns')
+
+
+## dynamic sleep delay check ##
+def DYNAMIC_SLEEP_DELAY_CHECK(self, sleepTime):
+    print('before this test do the test: SLEEP_DELAY_CHECK')
+    Asist_Func.program_sleep_timer(self, sleepTime)
+    Asist_Func.enable_dynamic_update(self)
+    print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1]')
+    print('PASS - The duration b/w the falling an rising edge shall be equal to (sleepTime*2^12+1000)*10ns')
+
+## adc clock div test ##
+def ADC_CLK_DIV_TEST(self, freq, temperature):  # test 14
+    Asist_Func.all_dts_disable() ###################### not finished!! need to add dict in diode and insert data
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    Asist_Func.update_chosen_mask(self, 1)
+    Asist_Func.program_adc_clock_freq(self, freq)
+    Asist_Func.dts_enable(self)
+    if Asist_Func.valid_diode_check(self, 0):  # check diode 0
+        measTemperature = Asist_Func.read_temperature_code(self, 0)
+
+
+
+## ana pwr seq view ##
+def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
+    Asist_Func.all_dts_disable()
+    Asist_Func.program_digital_viewpin_o_digital_0(self, 0xe)
+    Asist_Func.program_digital_viewpin_o_digital_1(self, viewpin1Signal)
+    print('Measure the time b/w falling edge viewpin0 and each of the signal on Viewpin1 '
+          'by running multiple iterations of this test.')

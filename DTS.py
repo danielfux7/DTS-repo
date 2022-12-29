@@ -83,7 +83,7 @@ class DTS:
 
     ## Trim the diodea ##
     ## Description:
-    def DTS_cat_trim_rawcode(self, cattrip_temperature):
+    def DTS_cat_trim_rawcode(self, cattrip_temperature):  # test 8.5
         _DTS.DTS_cat_trim_rawcode(self, cattrip_temperature)
 
     ## Post Calib Catblk Check ##
@@ -93,10 +93,32 @@ class DTS:
 
     ## BG wait time check ##
     # Description:
-    def BG_WAIT_TIME_CHECK(self):  # test 9
-        _DTS.BG_WAIT_TIME_CHECK(self)
+    def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
+        _DTS.BG_WAIT_TIME_CHECK(self, waitDelay)
 
+    ## BG wait code check ##
+    # Description:
+    def BG_WAIT_CODE_CHECK(self, waitDelay):  # test 12
+        _DTS.BG_WAIT_CODE_CHECK(self, waitDelay)
 
+    ## sleep delay check ##
+    # Description:
+    def SLEEP_DELAY_CHECK(self, sleepTime):  # test 12
+        _DTS.SLEEP_DELAY_CHECK(self, sleepTime)
+
+    ## dynamic skeep delay check ##
+    # Description:
+    def DYNAMIC_SLEEP_DELAY_CHECK(self, sleepTime):  # test 13
+        _DTS.DYNAMIC_SLEEP_DELAY_CHECK(self, sleepTime)
+
+    ## adc clock div test ##
+    # Description:
+    def ADC_CLK_DIV_TEST(self, freq, temperature):  # test 14
+        _DTS.ADC_CLK_DIV_TEST(self, freq , temperature)
+
+    ## ana pwr seq view ##
+    def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
+        _DTS.ANA_PWR_SEQ_VIEW(self, viewpin1Signal)
 
 if __name__ == '__main__':
     pass
