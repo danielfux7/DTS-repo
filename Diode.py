@@ -8,10 +8,16 @@ class Diode:
     offset = -1
     catSlope = -1
     catOffset = -1
+    PassNsAlertTest = -1
+    PassStickyAlertTest = -1
     posttrimData = {}
     catAutoTrimData = []
     cat2PointsTrimData = []
     postCalibData = {}
+    bgWaitData = {}
+    bgWaitPostTrimData = {}
+    ADCclkDivData ={}
+
 
     def __init__(self, diodeNum):
         self.diodeNum = diodeNum
@@ -29,6 +35,7 @@ class Diode:
         self.catAutoTrimData = []
         self.cat2PointsTrimData = []
         self.postCalibData = {}
-
-
-
+        self.bgWaitData = {}
+        self.bgWaitPost = {}
+        self.bgWaitPostTrimData = {}
+        self.ADCclkDivData = {25: [], 50: [], 100: []}

@@ -2,6 +2,8 @@ import Asist_Func
 from Asist_Func import *
 import Diode
 from Diode import *
+import BgwaitPostTrim
+from BgwaitPostTrim import *
 
 
 def create_new_path(old_path, tapNum, dtsName):
@@ -328,7 +330,7 @@ def DTS_CRI_Write_Read_check(self):  # test 4
     pass
 
 ## Pre Trim Rawcode Readout ##
-def DTS_pretrim_rawcode_readout_particular_temp(self,temp):  # test 5
+def DTS_pretrim_rawcode_readout_particular_temp(self,temp, bgWait):  # test 5
     #  initialize arrays
     minCodeArr = [0xffff] * self.NumOfDiode
     maxCodeArr = [0] * self.NumOfDiode
@@ -343,6 +345,8 @@ def DTS_pretrim_rawcode_readout_particular_temp(self,temp):  # test 5
         for diode in range(int(self.NumOfDiode)):
             Asist_Func.update_diode_mask(self, int(diode))  # Update diode mask
             Asist_Func.oneshot_disable(self)  # Disable oneshot mode
+            if bgWait:  # check if need to configure delay for bg
+                Asist_Func.program_bg_wait(self, bgWait)
             Asist_Func.dts_enable(self)  # enable DTS via registers
 
             #if Asist_Func.valid_diode_check(self, diode):  # check if diode exist and valid
@@ -365,20 +369,39 @@ def DTS_pretrim_rawcode_readout_particular_temp(self,temp):  # test 5
         if True:  ########## for debug:
             meanCodeArr[i] = sumCodeArr[i] / MeasurementsNum
             diodeData = [temp,  meanCodeArr[i], minCodeArr[i], maxCodeArr[i]]
-            self.diodesList[i].pretrimData.append(diodeData)
+            if bgWait == 0:
+                self.diodesList[i].pretrimData.append(diodeData)
+            else:
+                diodeData.append(bgWait)  # this data is from the bg wait code check
+                if bgWait in self.diodesList[diode].bgWaitData:
+                    self.diodesList[diode].bgWaitData[bgWait].append(diodeData)
+                else:
+                    self.diodesList[diode].bgWaitData.update({bgWait: diodeData})
         else:
             meanCodeArr[i] = 'invalid diode'
             self.diodesList[i].valid = False
 
 
-    print('finish pre trim temp')
+    print('finish pre trim temp / bgwait code check')
+
 
 ## Trim the diodea ##
-def DTS_trim_rawcode(self):
+def DTS_trim_rawcode(self, bgWait):
     for diode in range(self.NumOfDiode):
         if self.diodesList[diode].valid:
-            temperatures = [item[0] for item in self.diodesList[diode].pretrimData]
-            rawcodes = [item[1] for item in self.diodesList[diode].pretrimData]
+            if bgWait == 0:  #  trim after posttrim
+                temperatures = [item[0] for item in self.diodesList[diode].pretrimData]
+                rawcodes = [item[1] for item in self.diodesList[diode].pretrimData]
+
+            else:
+                if bgWait in self.diodesList[diode].bgWaitData:
+                    temperatures = [item[0] for item in self.diodesList[diode].bgWaitData[bgWait]]
+                    rawcodes = [item[1] for item in self.diodesList[diode].bgWaitData[bgWait]]
+
+                else:
+                    print('This bg wait time is not exist, you should do pre trim first')
+                    return
+
             slope, offset = Asist_Func.calculate_slope_and_offset(rawcodes, temperatures)
             print('slope: ' + str(slope))
             print('offset: ' + str(offset))
@@ -386,7 +409,7 @@ def DTS_trim_rawcode(self):
 
 
 ## Post Trim Temp Readout ##
-def DTS_posttrim_temp_readout(self, temperature):  # test 6
+def DTS_posttrim_temp_readout(self, temperature, bgWait):  # test 6
     Asist_Func.all_dts_disable()  # First disable all the DTS
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     Asist_Func.update_chosen_mask(self, 0xffff)  # update the mask to select all the calibrated dioides
@@ -402,7 +425,20 @@ def DTS_posttrim_temp_readout(self, temperature):  # test 6
                 measTemperature = self.diodesList[diode].slope * rawcode_read(self) + self.diodesList[diode].offset
                 tempError = temperature - measTemperature
                 curr = [temperature, measTemperature, tempError]
-                self.diodesList[diode].posttrimData[OSRmodes[i]].append(curr)
+                if bgWait == 0:
+                    self.diodesList[diode].posttrimData[OSRmodes[i]].append(curr)
+
+                else:
+                    if bgWait in self.diodesList[diode].bgWaitData:
+                        if bgWait in self.diodesList[diode].bgWaitPost:
+                            self.diodesList[diode].bgWaitPost[bgWait].Data[OSRmodes[i]].append(curr)
+                        else:
+                            self.diodesList[diode].bgWaitPost.update({bgWait: BgwaitPostTrim(bgWait)})
+                            self.diodesList[diode].bgWaitPost[bgWait].Data[OSRmodes[i]].append(curr)
+                    else:
+                        print('This bg wait time is not exist, you sshould do pre trim first')
+                        return
+
         Asist_Func.dts_disable(self)
     Asist_Func.all_dts_disable()
     print('finish post trim readout')
@@ -527,18 +563,9 @@ def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
 
 
 ## BG wait code check ##
-def BG_WAIT_CODE_CHECK(self, waitDelay):  # test 12
-    print('do this test after pre trim ')
-    Asist_Func.all_dts_disable() ######################### not finished
-    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
-    Asist_Func.update_chosen_mask(self, 1)  # select at least 2 of the connected diodes
-    Asist_Func.oneshot_disable(self)
-    Asist_Func.dts_enable(self)
-
-
-    Asist_Func.program_bg_wait(self, waitDelay)
-    Asist_Func.program_digital_viewpin_o_digital_1(self, 0xb)
-    Asist_Func.dts_enable(self)
+def BG_WAIT_CODE_CHECK(self, temperature, bgWait):  # test 12
+    print('do this test after pre trim  ')
+    DTS_pretrim_rawcode_readout_particular_temp(self, temperature, bgWait)
 
 
 ## sleep delay check ##
@@ -561,15 +588,147 @@ def DYNAMIC_SLEEP_DELAY_CHECK(self, sleepTime):
     print('PASS - The duration b/w the falling an rising edge shall be equal to (sleepTime*2^12+1000)*10ns')
 
 ## adc clock div test ##
-def ADC_CLK_DIV_TEST(self, freq, temperature):  # test 14
-    Asist_Func.all_dts_disable() ###################### not finished!! need to add dict in diode and insert data
+def ADC_CLK_DIV_TEST(self, temperature, diode):  # test 14
+    Asist_Func.all_dts_disable()
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
-    Asist_Func.update_chosen_mask(self, 1)
-    Asist_Func.program_adc_clock_freq(self, freq)
-    Asist_Func.dts_enable(self)
-    if Asist_Func.valid_diode_check(self, 0):  # check diode 0
-        measTemperature = Asist_Func.read_temperature_code(self, 0)
+    for freq in FrequenciesList:
+        Asist_Func.update_chosen_mask(self, diode)
+        Asist_Func.program_adc_clock_freq(self, FrequenciesDict[freq])
+        Asist_Func.dts_enable(self)
+        if Asist_Func.valid_diode_check(self, diode):  # check some diode you choose
+            measTemperature = Asist_Func.read_temperature_code(self, diode)
+            tempError = temperature - measTemperature
+            curr = [temperature, measTemperature, tempError]
+            self.diodesList[diode].ADCclkDivData[freq].append(curr)
+        else:
+            print('invalid diode')
+        Asist_Func.dts_disable(self)
 
+
+def get_to_high_temperature_limit_direction_1(self, diode, maxTemperature, threshold, pass_flag):
+    while maxTemperature > Asist_Func.read_temperature_code(self, diode):
+        input('Increase the temperature by step of one and press any key to continue')
+        currTemp = Asist_Func.read_temperature_code(self, diode)
+        print('the current temperature for the diode ' + str(diode) + ' is:')
+        print(currTemp)
+        if Asist_Func.dtd_ns_alert(self):
+            if currTemp < threshold:
+                self.diodesList[diode].PassNsAlertTest = 0
+                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+            else:
+                print('NS alert rised as expected for the temperature: ' + str(currTemp))
+                if not pass_flag:
+                    self.diodesList[diode].PassNsAlertTest += 1
+                    pass_flag = 1
+
+def get_to_low_temperature_limit_direction_1(self, diode, minTemperature, threshold, pass_flag):
+    while minTemperature < Asist_Func.read_temperature_code(self, diode):
+        input('Decrease the temperature by step of one and press any key to continue')
+        currTemp = Asist_Func.read_temperature_code(self, diode)
+        print('the current temperature for the diode ' + str(diode) + ' is:')
+        print(currTemp)
+        if not Asist_Func.dtd_ns_alert(self):
+            if currTemp > threshold:
+                self.diodesList[diode].PassNsAlertTest = 0
+                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+            else:
+                print('NS alert rised as expected for the temperature: ' + str(currTemp))
+                if not pass_flag:
+                    self.diodesList[diode].PassNsAlertTest += 1
+                    pass_flag = 1
+
+
+def get_to_high_temperature_limit_direction_0(self, diode, maxTemperature, threshold, pass_flag):
+    while maxTemperature > Asist_Func.read_temperature_code(self, diode):
+        input('Increase the temperature by step of one and press any key to continue')
+        currTemp = Asist_Func.read_temperature_code(self, diode)
+        print('the current temperature for the diode ' + str(diode) + ' is:')
+        print(currTemp)
+        if not Asist_Func.dtd_ns_alert(self):
+            if currTemp < threshold:
+                self.diodesList[diode].PassNsAlertTest = 0
+                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+            else:
+                print('NS alert rised as expected for the temperature: ' + str(currTemp))
+                if not pass_flag:
+                    self.diodesList[diode].PassNsAlertTest += 1
+                    pass_flag = 1
+
+def get_to_low_temperature_limit_direction_0(self, diode, minTemperature, threshold, pass_flag):
+    while minTemperature < Asist_Func.read_temperature_code(self, diode):
+        input('Decrease the temperature by step of one and press any key to continue')
+        currTemp = Asist_Func.read_temperature_code(self, diode)
+        print('the current temperature for the diode ' + str(diode) + ' is:')
+        print(currTemp)
+        if Asist_Func.dtd_ns_alert(self):
+            if currTemp > threshold:
+                self.diodesList[diode].PassNsAlertTest = 0
+                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+            else:
+                print('NS alert rised as expected for the temperature: ' + str(currTemp))
+                if not pass_flag:
+                    self.diodesList[diode].PassNsAlertTest += 1
+                    pass_flag = 1
+
+
+## DTD non sticky alert test ## test 16
+def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction):
+    Asist_Func.all_dts_disable()
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    for diode in range(self.NumOfDiode):
+        Asist_Func.update_diode_mask(self, diode)
+        Asist_Func.reinsert_calculated_existed_slope_offset(self, diode)
+        Asist_Func.dts_enable(self)
+        Asist_Func.dtd_ns_alert_threshold_direction_insert(self, threshold, direction)
+        if direction:
+            if Asist_Func.valid_diode_check(self, diode):
+                pass_flag = 0
+                get_to_high_temperature_limit_direction_1(self, diode, maxTemperature, threshold, pass_flag)
+                if not Asist_Func.dtd_ns_alert(self):
+                    self.diodesList[diode].PassNsAlertTest = 0
+                    print('There is no alert after crossing the threshold temperature')
+                    print('Lower the temperature to the minimum temperature value')
+                    while minTemperature < Asist_Func.read_temperature_code(self, diode):
+                        input('Decrease the temperature to the minimum value and press any key to continue')
+                        currTemp = Asist_Func.read_temperature_code(self, diode)
+                        print('the current temperature for the diode ' + str(diode) + ' is:')
+                        print(currTemp)
+                    continue  # check the next diode
+
+                else:  # part 2 of the test is lower the temeerature to the min value and check if alert is gone
+                    pass_flag = 0
+                    get_to_low_temperature_limit_direction_1(self, diode, minTemperature, threshold, pass_flag)
+                    if Asist_Func.dtd_ns_alert(self):
+                        print('There is alert after crossing the threshold temperature')
+                        self.diodesList[diode].PassNsAlertTest = 0
+
+            else:
+                print('diode not valid')
+
+        else:  # direction is 0, now we will check the the other direction, triggered when below threshold
+            if Asist_Func.valid_diode_check(self, diode):
+                pass_flag = 0
+                get_to_low_temperature_limit_direction_0(self, diode, minTemperature, threshold, direction )
+                if not Asist_Func.dtd_ns_alert(self):
+                    self.diodesList[diode].PassNsAlertTest = 0
+                    print('There is no alert after crossing the threshold temperature')
+                    print('Increase the temperature to the max temperature value')
+                    while maxTemperature > Asist_Func.read_temperature_code(self, diode):
+                        input('Decrease the temperature to the max value and press any key to continue')
+                        currTemp = Asist_Func.read_temperature_code(self, diode)
+                        print('the current temperature for the diode ' + str(diode) + ' is:')
+                        print(currTemp)
+                    continue  # check the next diode
+
+                else:  # part 2 of the test is lower the temeerature to the min value and check if alert is gone
+                    pass_flag = 0
+                    get_to_high_temperature_limit_direction_0(self, diode, minTemperature, threshold, pass_flag)
+                    if Asist_Func.dtd_ns_alert(self):
+                        print('There is alert after crossing the threshold temperature')
+                        self.diodesList[diode].PassNsAlertTest = 0
+
+            else:
+                print('diode not valid')
 
 
 ## ana pwr seq view ##

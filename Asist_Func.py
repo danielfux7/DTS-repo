@@ -15,14 +15,18 @@ except:
         "WARNING: Your PythonSV doesn't seem to have the cpu component loaded. Some scripts may fail due to this.")
 
 # Constants #
+Mega =  1000000
 ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
 OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
             '256_avgen', '512_avgen', '1024_avgen', '2048_avgen']
+FrequenciesDict = {25: 2, 50: 0, 100: 1}
+FrequenciesList = [25, 50, 100]
 
 OSRmodesNum = 8
 VinADC = 0.77
 VrefADC = 0.93
 MeasurementsNum = 5
+NumNsAllert = 4
 
 DiodeNum = {
     "dts0_aon": 1,
@@ -128,6 +132,15 @@ def insert_slope_offset_to_diode(self, diode, slope, offset):
     exec(command)
     self.diodesList[diode].slope = slope
     self.diodesList[diode].offset = offset
+
+
+def reinsert_calculated_existed_slope_offset(self ,diode):
+    slope = self.diodesList[diode].slope
+    offset = self.diodesList[diode].offset
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
+    exec(command)
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset)
+    exec(command)
 
 
 def update_osr_mode(self, avgen, mode):
@@ -258,6 +271,14 @@ def dtd_ns_alert(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.dtd_ns_alert'
     dtdnsAllert = eval(command)
     return int(dtdnsAllert)
+
+def dtd_ns_alert_threshold_direction_insert(self, threshold, direction):
+    T = (threshold + 64) * 2
+    for i in range(NumNsAllert):
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_nsalert_thr_' + str(i) + '=' + str(T)
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_nsalert_' + str(i) + '_dir=' + str(direction)
+        exec(command)
 
 
 def dtd_sticky_thr_high(self, highLimit):

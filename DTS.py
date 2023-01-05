@@ -58,18 +58,18 @@ class DTS:
 
     ## Pre Trim Rawcode Readout ##
     # Description:
-    def pretrim_rawcode_readout(self, temp):  # test 5
-        _DTS.DTS_pretrim_rawcode_readout_particular_temp(self, temp)
+    def pretrim_rawcode_readout(self, temp, bgWait):  # test 5
+        _DTS.DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait)
 
     ## Trim the diodea ##
     ## Description:
-    def DTS_trim_rawcode(self):
-        _DTS.DTS_trim_rawcode(self)
+    def DTS_trim_rawcode(self, bgWait):
+        _DTS.DTS_trim_rawcode(self, bgWait)
 
     ## Post Trim Temp Readout ##
     # Description:
-    def posttrim_temp_readout(self, temperature):  # test 6
-        _DTS.DTS_posttrim_temp_readout(self, temperature)
+    def posttrim_temp_readout(self, temperature, bgWait):  # test 6
+        _DTS.DTS_posttrim_temp_readout(self, temperature, bgWait)
 
     ## cat autotrim check ##
     # Description:
@@ -98,8 +98,8 @@ class DTS:
 
     ## BG wait code check ##
     # Description:
-    def BG_WAIT_CODE_CHECK(self, waitDelay):  # test 12
-        _DTS.BG_WAIT_CODE_CHECK(self, waitDelay)
+    def BG_WAIT_CODE_CHECK(self, temperature, bgWait):  # test 12
+        _DTS.BG_WAIT_CODE_CHECK(self, bgWait)
 
     ## sleep delay check ##
     # Description:
@@ -113,8 +113,13 @@ class DTS:
 
     ## adc clock div test ##
     # Description:
-    def ADC_CLK_DIV_TEST(self, freq, temperature):  # test 14
-        _DTS.ADC_CLK_DIV_TEST(self, freq , temperature)
+    def ADC_CLK_DIV_TEST(self, temperature):  # test 14
+        _DTS.ADC_CLK_DIV_TEST(self, temperature)
+
+    ## DTD ns alert test ## test 16
+    def DTD_NS_ALERT_TEST(self, temperature, threshold, direction ):
+        _DTS.DTD_NS_ALERT_TEST(self, temperature, threshold, direction)
+
 
     ## ana pwr seq view ##
     def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
