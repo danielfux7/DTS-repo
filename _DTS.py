@@ -730,6 +730,129 @@ def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction
             else:
                 print('diode not valid')
 
+def get_to_high_and_low_sticky_temperature_limit(self, diode, maxTemperature, minTemperature, highThreshold,lowThreshold):
+    pass_flag = 0
+    while maxTemperature > Asist_Func.read_temperature_code(self, diode):
+        input('Increase the temperature by step of one and press any key to continue')
+        currTemp = Asist_Func.read_temperature_code(self, diode)
+        print('the current temperature for the diode ' + str(diode) + ' is:')
+        print(currTemp)
+        if Asist_Func.dtd_alert(self):
+            if currTemp < highThreshold:
+                self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
+                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+                break
+            else:
+                print('Sticky alert rised as expected for the temperature: ' + str(currTemp))
+                if not pass_flag:
+                    self.diodesList[diode].PassStickyAlertTest += 1
+                    pass_flag = 1
+
+    if not pass_flag and Asist_Func.read_temperature_code(self, diode) > highThreshold:  # The trigger didn't rise at all
+        self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
+        print('No sticky alert although the temperature is above the high limit')
+
+    print('The sticky trigger is working for crossing high limit')
+    input('Get the temperature to between the limits and press any key')
+    currTemp = Asist_Func.read_temperature_code(self, diode)
+    print('the current temperature for the diode ' + str(diode) + ' is:')
+    print(currTemp)
+    if not Asist_Func.dtd_alert(self):
+        print('The sticky alert is 0 even though we did not clear it')
+        self.diodesList[diode].PassStickyAlertTest = 0
+
+    Asist_Func.clear_sticky_alert(self)
+
+    # Check the low limit threshold of the sticky alert
+    pass_flag = 0
+    while minTemperature < Asist_Func.read_temperature_code(self, diode):
+        input('Decrease the temperature by step of one and press any key to continue')
+        currTemp = Asist_Func.read_temperature_code(self, diode)
+        print('the current temperature for the diode ' + str(diode) + ' is:')
+        print(currTemp)
+        if Asist_Func.dtd_alert(self):
+            if currTemp > lowThreshold:
+                self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
+                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+                break
+            else:
+                print('Sticky alert triggered as expected for the temperature: ' + str(currTemp))
+                if not pass_flag:
+                    self.diodesList[diode].PassStickyAlertTest += 1
+                    pass_flag = 1
+
+    if not pass_flag and Asist_Func.read_temperature_code(self, diode) < lowThreshold:  # The trigger didn't rise at all
+        self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
+        print('No sticky alert although the temperature is under the low limit')
+
+    print('The sticky trigger is working for crossing low limit')
+    input('Get the temperature to between the limits and press any key')
+    currTemp = Asist_Func.read_temperature_code(self, diode)
+    print('the current temperature for the diode ' + str(diode) + ' is:')
+    print(currTemp)
+    if not Asist_Func.dtd_alert(self):
+        print('The sticky alert is 0 even though we did not clear it')
+        self.diodesList[diode].PassStickyAlertTest = 0
+
+    if self.diodesList[diode].PassStickyAlertTest == 2:
+        print('The sticky alert works as expected!')
+
+
+
+## DTD sticky alert test ## test 17
+def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLimit):
+    print('Make sure the current temperature is between the limits ')
+    Asist_Func.all_dts_disable()
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    for diode in range(self.NumOfDiode):
+        Asist_Func.update_diode_mask(self, diode)
+        Asist_Func.reinsert_calculated_existed_slope_offset(self, diode)
+        Asist_Func.dts_enable(self)
+        Asist_Func.dtd_sticky_thr_high(self, highLimit)
+        Asist_Func.dtd_sticky_thr_low(self, lowLimit)
+        if Asist_Func.valid_diode_check(self, diode):
+            pass_flag = 0
+            get_to_high_and_low_sticky_temperature_limit(self, diode, maxTemperature, minTemperature, highLimit,lowLimit)
+        else:
+            print('diode not valid')
+
+        Asist_Func.dts_disable(self)
+    Asist_Func.all_dts_disable()
+
+## bgcore bgg vtrim 700m ## test 19
+def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):
+    Asist_Func.all_dts_disable()
+    Asist_Func.set_any_bg_trim_code_and_tc(self, bgtrimcode)
+    if tc != -1:
+        Asist_Func.set_ant_tc(self, tc)
+    Asist_Func.program_digital_viewpin_o_digital_1(self, int('0b10000111', 2))
+    Asist_Func.dts_enable(self)
+    input('Measure the voltage VBG through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and that press any key')
+
+    Asist_Func.dts_disable(self)
+    Asist_Func.program_digital_viewpin_o_digital_0(self, int('0b11001111', 2))
+    Asist_Func.dts_enable(self)
+    input('Measure the vtrim_700m voltage through the analog DFT via bump xx_b_dts_anaview_0_dts_lv and press any key')
+
+    if tc != -1:
+        Asist_Func.dts_disable(self)
+        Asist_Func.program_digital_viewpin_o_digital_1(self, int('0b11000101', 2))
+        Asist_Func.dts_enable(self)
+        input('Measure the vbe_dummy voltage through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and press any key')
+
+    Asist_Func.dts_disable(self)
+
+## DTS pre trim bg ref check ## test 20
+def DTS_PRETRIM_BGREF_CHECK(self):
+    BGCORE_VBG_vtrim(self, 0, -1)
+    BGCORE_VBG_vtrim(self, int('0b11001', 2), -1)
+    BGCORE_VBG_vtrim(self, int('0b11111', 2), -1)
+
+def DTS_POSTTRIM_BGREF_CHECK(self):
+    bgtrimcode = self.Step2TrimValue
+    for tc in range(8):
+        BGCORE_VBG_vtrim(self, bgtrimcode, tc)
+
 
 ## ana pwr seq view ##
 def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
@@ -738,3 +861,7 @@ def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
     Asist_Func.program_digital_viewpin_o_digital_1(self, viewpin1Signal)
     print('Measure the time b/w falling edge viewpin0 and each of the signal on Viewpin1 '
           'by running multiple iterations of this test.')
+
+def DTS_RD_VBE_Check(self):
+    pass
+

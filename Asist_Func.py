@@ -54,6 +54,15 @@ def program_bg_code(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(self.Step2TrimValue)
     exec(command)
 
+def set_any_bg_trim_code_and_tc(self, bgtrimcode):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(bgtrimcode)
+    exec(command)
+
+
+def set_ant_tc(self, tc):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtc =' + str(tc)
+    exec(command)
+
 def oneshot_disable(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.oneshotmodeen = 0x0'
     exec(command)
@@ -282,12 +291,14 @@ def dtd_ns_alert_threshold_direction_insert(self, threshold, direction):
 
 
 def dtd_sticky_thr_high(self, highLimit):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_h=' + str(highLimit)
+    T = (highLimit + 64) * 2
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_h=' + str(T)
     exec(command)
 
 
 def dtd_sticky_thr_low(self, lowLimit):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_l=' + str(lowLimit)
+    T = (lowLimit + 64) * 2
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_l=' + str(T)
     exec(command)
 
 

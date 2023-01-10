@@ -120,6 +120,19 @@ class DTS:
     def DTD_NS_ALERT_TEST(self, temperature, threshold, direction ):
         _DTS.DTD_NS_ALERT_TEST(self, temperature, threshold, direction)
 
+    ## DTD sticky alert test ## test 17
+    def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLimit):
+        _DTS.DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLimit)
+
+    ## bgcore bgg vtrim ## test 19
+    def BGCORE_VBG_vtrim(self, bgtrimcode, tc):
+        _DTS.BGCORE_VBG_vtrim(self, bgtrimcode, tc)
+
+    ## DTS pre trim bg ref check ## test 20
+    def DTS_PRETRIM_BGREF_CHECK(self):
+        _DTS.DTS_PRETRIM_BGREF_CHECK(self)
+
+
 
     ## ana pwr seq view ##
     def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
