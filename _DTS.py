@@ -825,28 +825,30 @@ def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):
     Asist_Func.set_any_bg_trim_code_and_tc(self, bgtrimcode)
     if tc != -1:
         Asist_Func.set_ant_tc(self, tc)
-    Asist_Func.program_digital_viewpin_o_digital_1(self, int('0b10000111', 2))
+    Asist_Func.program_viewanasigsel(self, int('0b10000111', 2))
     Asist_Func.dts_enable(self)
     input('Measure the voltage VBG through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and that press any key')
 
     Asist_Func.dts_disable(self)
-    Asist_Func.program_digital_viewpin_o_digital_0(self, int('0b11001111', 2))
+    Asist_Func.program_viewanasigsel(self, int('0b11001111', 2))
     Asist_Func.dts_enable(self)
     input('Measure the vtrim_700m voltage through the analog DFT via bump xx_b_dts_anaview_0_dts_lv and press any key')
 
     if tc != -1:
         Asist_Func.dts_disable(self)
-        Asist_Func.program_digital_viewpin_o_digital_1(self, int('0b11000101', 2))
+        Asist_Func.program_viewanasigsel(self, int('0b11000101', 2))
         Asist_Func.dts_enable(self)
         input('Measure the vbe_dummy voltage through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and press any key')
 
     Asist_Func.dts_disable(self)
+
 
 ## DTS pre trim bg ref check ## test 20
 def DTS_PRETRIM_BGREF_CHECK(self):
     BGCORE_VBG_vtrim(self, 0, -1)
     BGCORE_VBG_vtrim(self, int('0b11001', 2), -1)
     BGCORE_VBG_vtrim(self, int('0b11111', 2), -1)
+
 
 def DTS_POSTTRIM_BGREF_CHECK(self):
     bgtrimcode = self.Step2TrimValue
@@ -862,6 +864,32 @@ def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
     print('Measure the time b/w falling edge viewpin0 and each of the signal on Viewpin1 '
           'by running multiple iterations of this test.')
 
+
+def vbe_setup_configuration(self):
+    Asist_Func.ldo1p2_vref_range_select(self, 6)
+    Asist_Func.lvrrref_en(self)
+    Asist_Func.ldo1p2_ext_vref_select(self, 1)  # Program 1.2VLDO reference selection mux to take lvrref as reference voltage
+    Asist_Func.adc_vref_select(self, 15)
+    Asist_Func.adc_vref_buf_select(self, 0)  # Bypass Vref_ldo and apply vref_ext as reference to ADC
+
+    # Program supply_ldo to take external refrence as input
+    Asist_Func.adc_supply_buf_vref_ext_select(self, 1)
+    Asist_Func.adc_supply_buf_out_select(self, 1)
+
+    # Apply Vbe as input to AZ buffer through DFC input
+    Asist_Func.adcvinsel0_select(self, 0)
+
+    # Program ADC reference mux to select lvref_a
+    Asist_Func.adcdfxextvref_select(self, 0)
+
+
+## VBE check ##
 def DTS_RD_VBE_Check(self):
-    pass
+    Asist_Func.all_dts_disable()
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    for diode in range(self.NumOfDiode):
+        vbe_setup_configuration(self)
+        Asist_Func.diode_sel_ovr_en(self)
+        Asist_Func.diode_sel_ovr_val(self, diode)
+
 

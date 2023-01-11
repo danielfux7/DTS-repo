@@ -199,8 +199,14 @@ def program_digital_viewpin_o_digital_0(self, selector):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel0=' + str(selector)
     exec(command)
 
+
 def program_digital_viewpin_o_digital_1(self, selector):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel1=' + str(selector)
+    exec(command)
+
+
+def program_viewanasigsel(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewanasigsel=' + str(selector)
     exec(command)
 
 
@@ -307,3 +313,54 @@ def clear_sticky_alert(self):
     exec(command)
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtd_sticky_alert_clr=0'
     exec(command)
+
+
+def ldo1p2_vref_range_select(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_vref_range_sel=' + str(selector)
+    exec(command)
+
+
+def ldo1p2_ext_vref_select(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_ext_vref_sel=' + str(selector)
+    exec(command)
+
+
+def adc_vref_select(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvrefsel=' + str(selector)
+    exec(command)
+
+
+def adc_vref_buf_select(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvrefbufsel=' + str(selector)
+    exec(command)
+
+
+def adc_supply_buf_vref_ext_select(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_supply_buf_vref_ext_sel=' + str(selector)
+    exec(command)
+
+
+def adc_supply_buf_out_select(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_supply_buf_out_sel=' + str(selector)
+    exec(command)
+
+
+def adcvinsel0_select(self, selector):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvinsel0=' + str(selector)
+    exec(command)
+
+
+def adcdfxextvref_select(self, selector)
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.adcdfxextvref=' + str(selector)
+    exec(command)
+
+
+def lvrrref_en(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=1'
+    exec(command)
+
+
+def lvrrref_dis(self):
+    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=0'
+    exec(command)
+
