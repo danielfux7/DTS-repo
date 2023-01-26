@@ -54,12 +54,12 @@ def program_bg_code(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(self.Step2TrimValue)
     exec(command)
 
-def set_any_bg_trim_code_and_tc(self, bgtrimcode):
+def set_any_bg_trim_code(self, bgtrimcode):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(bgtrimcode)
     exec(command)
 
 
-def set_ant_tc(self, tc):
+def set_any_tc(self, tc):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtc =' + str(tc)
     exec(command)
 
@@ -163,6 +163,7 @@ def read_temperature_code(self, diode):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperature_' + str(diode)
     tempCode = eval(command)
     return int(tempCode)
+
 
 def diode_sel_ovr_en(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_en=1'
@@ -364,3 +365,12 @@ def lvrrref_dis(self):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=0'
     exec(command)
 
+
+# In this function, you need to implement the measurement method according to your measurement device
+def measure_analog_func(self, analog_view_num):
+    input() # need to implement the Evatar
+
+
+# In this function, you need to implement the measurement method according to your measurement device
+def measure_digital_func(self, digital_view_num):
+    input() # need to implement the Evatar

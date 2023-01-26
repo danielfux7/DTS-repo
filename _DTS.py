@@ -266,7 +266,7 @@ def DTS_TAP_Default_Check(self):  # test 1
     #unitDict = {unitNames[i]: unitValues[i] for i in range(len(defualtNames))}
     #print('unitDict: ' + str(unitDict))
 
-    unitDict = {'name': unitNames ,'unit_value': unitValues}
+    unitDict = {'name': unitNames,'unit_value': unitValues}
     unitData = pd.DataFrame.from_dict(unitDict)
     #print('unitDict: ' + str(unitDict))
     print('defaultData:')
@@ -822,23 +822,26 @@ def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLi
 ## bgcore bgg vtrim 700m ## test 19
 def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):
     Asist_Func.all_dts_disable()
-    Asist_Func.set_any_bg_trim_code_and_tc(self, bgtrimcode)
+    Asist_Func.set_any_bg_trim_code(self, bgtrimcode)
     if tc != -1:
-        Asist_Func.set_ant_tc(self, tc)
+        Asist_Func.set_any_tc(self, tc)
     Asist_Func.program_viewanasigsel(self, int('0b10000111', 2))
     Asist_Func.dts_enable(self)
-    input('Measure the voltage VBG through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and that press any key')
+    print('Measure the voltage VBG through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and that press any key')
+    Asist_Func.measure_analog_func(self, 1)
 
     Asist_Func.dts_disable(self)
     Asist_Func.program_viewanasigsel(self, int('0b11001111', 2))
     Asist_Func.dts_enable(self)
-    input('Measure the vtrim_700m voltage through the analog DFT via bump xx_b_dts_anaview_0_dts_lv and press any key')
+    print('Measure the vtrim_700m voltage through the analog DFT via bump xx_b_dts_anaview_0_dts_lv and press any key')
+    Asist_Func.measure_analog_func(self, 0)
 
     if tc != -1:
         Asist_Func.dts_disable(self)
         Asist_Func.program_viewanasigsel(self, int('0b11000101', 2))
         Asist_Func.dts_enable(self)
-        input('Measure the vbe_dummy voltage through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and press any key')
+        print('Measure the vbe_dummy voltage through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and press any key')
+        Asist_Func.measure_analog_func(self, 1)
 
     Asist_Func.dts_disable(self)
 
@@ -863,6 +866,9 @@ def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
     Asist_Func.program_digital_viewpin_o_digital_1(self, viewpin1Signal)
     print('Measure the time b/w falling edge viewpin0 and each of the signal on Viewpin1 '
           'by running multiple iterations of this test.')
+    Asist_Func.measure_digital_func(self, 0)
+    Asist_Func.measure_digital_func(self, 1)
+
 
 
 def vbe_setup_configuration(self):
@@ -891,5 +897,13 @@ def DTS_RD_VBE_Check(self):
         vbe_setup_configuration(self)
         Asist_Func.diode_sel_ovr_en(self)
         Asist_Func.diode_sel_ovr_val(self, diode)
+        Asist_Func.dts_enable(self)
+        if Asist_Func.valid_diode_check(self, diode):
+            rawcode = Asist_Func.rawcode_read(self)
+            #### TBD - save the data or extract the voltage
+
+        Asist_Func.dts_disable(self)
+
+
 
 
