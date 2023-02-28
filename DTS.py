@@ -41,6 +41,11 @@ class DTS:
     def DTS_TAP_Default_Check(self):  # test 1
         _DTS.DTS_TAP_Default_Check(self)
 
+    ## Write Values to Tap Registers ##
+    # Description: this function will insert values to Tap registers(dtsfusecfg,tapconfig,tapstatus)
+    def DTS_write_values_func(self):
+        _DTS.DTS_write_values_func(self)
+
     ## TAP Write Read Check ##
     # Description:
     def DTS_TAP_Write_Read_Check(self):  # test 2
@@ -51,10 +56,20 @@ class DTS:
     def DTS_CRI_Default_Check(self):  # test 3
         _DTS.DTS_CRI_Default_Check(self)
 
+    ## Write Values to CRI Registers ##
+    # Description: this function will insert values to CRI registers
+    def DTS_write_values_to_CRI(self):
+        _DTS.DTS_write_values_to_CRI(self)
+
     ## CRI Write Read Check ##
     # Description:
     def DTS_CRI_Write_Read_check(self):  # test 4
         _DTS.DTS_CRI_Write_Read_check(self)
+
+    ## Taps VS CRI ##
+    # Description:
+    def taps_against_cri(self):
+        _DTS.taps_against_cri(self)
 
     ## Pre Trim Rawcode Readout ##
     # Description:

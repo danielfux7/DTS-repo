@@ -39,7 +39,7 @@ DiodeNum = {
     "dts_gt1": 6,
 }
 
-Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus']
+Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs']
 
 def update_chosen_mask(self, mask):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask =' + str(mask)
@@ -351,7 +351,7 @@ def adcvinsel0_select(self, selector):
     exec(command)
 
 
-def adcdfxextvref_select(self, selector)
+def adcdfxextvref_select(self, selector):
     command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.adcdfxextvref=' + str(selector)
     exec(command)
 

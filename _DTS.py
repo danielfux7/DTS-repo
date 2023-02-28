@@ -247,27 +247,39 @@ def DTS_TAP_Default_Check(self):  # test 1
         print("Wrong Number, try again")
         tapNum = input()
 
-    defaultValuePath = input('insert the full path to the defaults values \n') # C:\Users\daniel\default.xlsx
+    defaultValuePath = input('insert the full path to the defaults values \n')  # C:\Users\daniel\default.xlsx
     defaultData = pd.read_excel(defaultValuePath)
     # print('defaultData: ' + str(defaultData))
 
     defualtNames = list(defaultData.name)
     defualtValues = list(defaultData.default_value)
-    defualtDict = {defualtNames[i]: defualtValues[i] for i in range(len(defualtNames))}
+
+    #  Filtering the fields :
+    for i in range(len(defualtValues)):
+        string = defualtValues[i]
+        index = string.find('h')
+        defualtValues[i] = int(string[index + 1:], 16)
+
+   # defualtDict = {defualtNames[i]: defualtValues[i] for i in range(len(defualtNames))}
     # print('defualtDict: ' + str(defualtDict))
+    defualtDict = {'name': defualtNames, 'default_value': defualtValues}
 
     unitNames = defualtNames
     unitValues = []
 
     for i in range(len(unitNames)):
         command = 'cpu.cdie.taps.cdie_' + self.name + '.' + Taps[int(tapNum)] + '.' + unitNames[i]
+        #print(unitNames[i])
         unitValues.append(eval(command))
+
 
     #unitDict = {unitNames[i]: unitValues[i] for i in range(len(defualtNames))}
     #print('unitDict: ' + str(unitDict))
 
     unitDict = {'name': unitNames,'unit_value': unitValues}
     unitData = pd.DataFrame.from_dict(unitDict)
+    defaultData = pd.DataFrame.from_dict(defualtDict)
+
     #print('unitDict: ' + str(unitDict))
     print('defaultData:')
     print(defaultData)
@@ -288,7 +300,7 @@ def DTS_TAP_Default_Check(self):  # test 1
     # create new column in DataFrame that displays results of comparisons
     finalData['status'] = np.select(conditions, choices, default='Tie')
 
-    exportPath = create_new_path(defaultValuePath,tapNum, dtsName)
+    exportPath = create_new_path(defaultValuePath, tapNum, dtsName)
     finalData.to_excel(exportPath)
 
     print(finalData)
@@ -322,15 +334,87 @@ def DTS_TAP_Write_Read_Check(self):  # test 2
 
 ## CRI Defualt Check ##
 def DTS_CRI_Default_Check(self):  # test 3
-    pass
+    # get the CRI commands
+    CRIcommandsPath = input('insert the full path to the CRI file \n')  # C:\Users\daniel\CRI_commands.xlsx
+    CRIData = pd.read_excel(CRIcommandsPath)
+    fuseNames = list(CRIData.FuseName)
+    CRICommand = list(CRIData.CRICommand)
+    CRIValues = list(CRIData.value)
+    CRIValues = [int(x) for x in CRIValues]
+
+    unitValues = []
+
+    for i in range(len(fuseNames)):
+        command = 'cpu.cdie.soc_cr_wrapper.' + self.name + '.inst0.' + CRICommand[i]
+        unitValues.append(eval(command))
+
+    status = []
+    for i in range(len(fuseNames)):
+        if unitValues[i] == CRIValues[i]:
+            status.append(True)
+        else:
+            status.append(False)
+
+    data = {'name': fuseNames, 'default_value': CRIValues, 'unit_value': unitValues, 'status': status}
+    finalData = pd.DataFrame(data)
+    print('final:')
+    print(finalData)
+
+    exportPath = create_new_path(CRIcommandsPath, 3, self.name)
+    finalData.to_excel(exportPath)
+
+## Write Values to CRI Registers ##
+# Description: this function will insert values to CRI registers
+def DTS_write_values_to_CRI(self):
+    valuesPath = input('insert the full path to the CRI file  \n')  # C:\Users\daniel\CRI_commands.xlsx
+    data = pd.read_excel(valuesPath)
+
+    CRICommand = list(data.CRICommand)
+    CRIValues = list(data.value)
+    #CRIValues = [int(x) for x in CRIValues]
+
+    for i in range(len(CRICommand)):
+        command = 'cpu.cdie.soc_cr_wrapper.' + self.name + '.inst0.' + CRICommand[i] + "=" + str(CRIValues[i])
+        exec(command)
 
 
 ## CRI Write Read Check ##
 def DTS_CRI_Write_Read_check(self):  # test 4
-    pass
+    DTS_write_values_to_CRI(self)
+    DTS_CRI_Default_Check(self)
+
+## Taps VS CRI ##
+def taps_against_cri(self):
+    valuesPath = input('insert the full path to the CRI file  \n')  # C:\Users\daniel\CRI_commands.xlsx
+    data = pd.read_excel(valuesPath)
+    fuseNames = list(data.FuseName)
+    CRICommand = list(data.CRICommand)
+
+    tapValue = []
+    CRIValue = []
+    status = []
+
+    for i in range(len(fuseNames)):
+        command = 'cpu.cdie.soc_cr_wrapper.' + self.name + '.inst0.' + CRICommand[i]
+        CRIValue.append(eval(command))
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.' + Taps[0] + '.' + fuseNames[i]
+        tapValue.append(eval(command))
+        if CRIValue[i] == tapValue[i]:
+            status.append(True)
+        else:
+            status.append(False)
+
+    data = {'name': fuseNames, 'cri_value': CRIValue, 'tap_value': tapValue, 'status': status}
+    finalData = pd.DataFrame(data)
+    print('final:')
+    print(finalData)
+
+    exportPath = create_new_path(valuesPath, 4, self.name)
+    finalData.to_excel(exportPath)
+
 
 ## Pre Trim Rawcode Readout ##
-def DTS_pretrim_rawcode_readout_particular_temp(self,temp, bgWait):  # test 5
+def DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait):  # test 5
     #  initialize arrays
     minCodeArr = [0xffff] * self.NumOfDiode
     maxCodeArr = [0] * self.NumOfDiode
