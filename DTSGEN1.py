@@ -13,3 +13,7 @@ class DTSGEN1:
     NumOfDiode = 6
     diodesList = []
 
+    # methods
+    def __init__(self):
+        _DTSGEN1.__init__(self)
+

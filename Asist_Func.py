@@ -17,6 +17,8 @@ except:
 # Constants #
 Mega =  1000000
 ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
+listGEN1DTS=['par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
+             'par_sa_pma1_core1_dts0', 'atom_lpc']
 OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
             '256_avgen', '512_avgen', '1024_avgen', '2048_avgen']
 FrequenciesDict = {25: 2, 50: 0, 100: 1}
@@ -42,72 +44,123 @@ DiodeNum = {
 Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs']
 
 def update_chosen_mask(self, mask):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask =' + str(mask)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask =' + str(mask)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.active_diode_mask =' + str(mask)
     exec(command)
+
 
 def update_diode_mask(self, diodeNum):
     diodeMask = pow(2, diodeNum)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask =' + str(diodeMask)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask =' + str(diodeMask)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.active_diode_mask =' + str(diodeMask)
     exec(command)
 
+
 def program_bg_code(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(self.Step2TrimValue)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(self.Step2TrimValue)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgrtrimcode =' + str(self.Step2TrimValue)
     exec(command)
 
 def set_any_bg_trim_code(self, bgtrimcode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(bgtrimcode)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(bgtrimcode)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgrtrimcode =' + str(bgtrimcode)
     exec(command)
 
 
 def set_any_tc(self, tc):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtc =' + str(tc)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtc =' + str(tc)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgrtc =' + str(tc)
     exec(command)
 
 def oneshot_disable(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.oneshotmodeen = 0x0'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.oneshotmodeen = 0x0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.oneshotmodeen = 0x0'
     exec(command)
 
 def oneshot_enable(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.oneshotmodeen = 0x1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.oneshotmodeen = 0x1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.oneshotmodeen = 0x1'
     exec(command)
 
 def dts_enable(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenableovrd = 1'
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenable = 1'
-    exec(command)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenableovrd = 1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenable = 1'
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtsenableovrd = 1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtsenable = 1'
+        exec(command)
 
 def dts_disable(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenableovrd = 1'
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenable = 0'
-    exec(command)
-
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenableovrd = 1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsenable = 0'
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtsenableovrd = 1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtsenable = 0'
+        exec(command)
 
 def all_dts_disable():
     for dts in ListDTS:
-        command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
-        exec(command)
-        command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 0'
-        exec(command)
-
+        if self.name != 'atom_lpc':
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
+            exec(command)
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 0'
+            exec(command)
+        else:
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.dtsenableovrd = 1'
+            exec(command)
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.dtsenable = 0'
+            exec(command)
 
 def all_dts_enable():
     for dts in ListDTS:
-        command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
-        exec(command)
-        command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 1'
-        exec(command)
+        if self.name != 'atom_lpc':
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
+            exec(command)
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 1'
+            exec(command)
+        else:
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.dtsenableovrd = 1'
+            exec(command)
+            command = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.dtsenable = 1'
+            exec(command)
 
 
 def valid_diode_check(self, diode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperaturevalid_' + str(diode)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperaturevalid_' + str(diode)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtstemperaturevalid_' + str(diode)
     valid = eval(command)
     return int(valid)
 
 
 def rawcode_read(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.adcrawcode'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.adcrawcode'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.adcrawcode'
     rawcode = eval(command)
     return int(rawcode)
 
@@ -125,117 +178,179 @@ def insert_cat_slope_offset_to_diode(self, diode, slope, offset):
 
 
 def convert_temperature_to_rawcode(temperature, slope, offset):
-        rawcode = round((temperature - offset) / slope)
-        return rawcode
+    rawcode = round((temperature - offset) / slope)
+    return rawcode
 
 
 def insert_cattrip_code(self, cattripcode, diode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cattripcode_' + str(diode) + '=' + str(cattripcode)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cattripcode_' + str(diode) + '=' + str(cattripcode)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.cattripcode_' + str(diode) + '=' + str(cattripcode)
     exec(command)
 
 
 def insert_slope_offset_to_diode(self, diode, slope, offset):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset)
-    exec(command)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset)
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.slope_' + str(diode) + '=' + str(slope)
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.offset_' + str(diode) + '=' + str(offset)
+        exec(command)
+
     self.diodesList[diode].slope = slope
     self.diodesList[diode].offset = offset
 
 
-def reinsert_calculated_existed_slope_offset(self ,diode):
+def reinsert_calculated_existed_slope_offset(self, diode):
     slope = self.diodesList[diode].slope
     offset = self.diodesList[diode].offset
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset)
-    exec(command)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset)
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.slope_' + str(diode) + '=' + str(slope)
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.offset_' + str(diode) + '=' + str(offset)
+        exec(command)
 
 
 def update_osr_mode(self, avgen, mode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_avgen=' + str(avgen)
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.osr=' + str(mode)
-    exec(command)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_avgen=' + str(avgen)
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.osr=' + str(mode)
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adc_avgen=' + str(avgen)
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.osr=' + str(mode)
+        exec(command)
 
 
 def read_temperature_code(self, diode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperature_' + str(diode)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtstemperature_' + str(diode)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtstemperature_' + str(diode)
     tempCode = eval(command)
     return int(tempCode)
 
 
 def diode_sel_ovr_en(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_en=1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_en=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.remote_diode_sel_ovr_en=1'
     exec(command)
-
 
 def diode_sel_ovr_val(self, diode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_val=' + str(diode)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.remote_diode_sel_ovr_val=' + str(diode)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.remote_diode_sel_ovr_val=' + str(diode)
     exec(command)
-
 
 def cat_alert_clear(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cat_alert_clr=1'
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cat_alert_clr=0'
-    exec(command)
-
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cat_alert_clr=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.cat_alert_clr=0'
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.cat_alert_clr=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.cat_alert_clr=0'
+        exec(command)
 
 def reset_cattrip_fsm(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.cattriptrimrstovrd=1'
     exec(command)
 
 def release_cattrip_fsm_reset(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=0'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimrstovrd=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.cattriptrimrstovrd=0'
     exec(command)
-
 
 def enable_dts_cattrip_auto_trim_fsm(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen=1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.cattriptrimen=1'
     exec(command)
-
 
 def program_digital_viewpin_o_digital_0(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel0=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel0=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.viewdigsigsel0=' + str(selector)
     exec(command)
-
 
 def program_digital_viewpin_o_digital_1(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel1=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewdigsigsel1=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.viewdigsigsel1=' + str(selector)
     exec(command)
-
 
 def program_viewanasigsel(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewanasigsel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewanasigsel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.viewanasigsel=' + str(selector)
     exec(command)
 
-
 def read_cattrip_fsm_state(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripfsmstate'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripfsmstate'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.cattripfsmstate'
     cattripFsmState = eval(command)
     return int(cattripFsmState)
 
 
 def read_cattripcode_out(self,diode):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_out_' + str(diode)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_out_' + str(diode)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.cattripcode_out_' + str(diode)
     cattripCode = eval(command)
     return int(cattripCode)
 
 
 def enable_trim_neg_temperature(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen_negtemp=1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.cattriptrimen_negtemp=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.cattriptrimen_negtemp=1'
     exec(command)
 
 
 def cattrip_alert(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattrip_alert'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattrip_alert'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.cattrip_alert'
     cattripAllert = eval(command)
     return int(cattripAllert)
 
 
 def program_bg_wait(self, waitDelay):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrwaitdelay=' + str(waitDelay)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrwaitdelay=' + str(waitDelay)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgrwaitdelay=' + str(waitDelay)
     exec(command)
 
 
@@ -244,125 +359,190 @@ def read_mean_max_min_rawcode_for_diode(self, readNum):
 
 
 def program_sleep_timer(self, sleepTime):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.sleeptimer=' + str(sleepTime)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.sleeptimer=' + str(sleepTime)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.sleeptimer=' + str(sleepTime)
     exec(command)
 
 
 def enable_dynamic_update(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.enable_dynamic_update=1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.enable_dynamic_update=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.enable_dynamic_update=1'
     exec(command)
 
 
 def disable_dynamic_update(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.enable_dynamic_update=0'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.enable_dynamic_update=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.enable_dynamic_update=0'
     exec(command)
 
 
 def program_adc_clock_freq(self, freq):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsadcclkdiv=' + str(freq)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtsadcclkdiv=' + str(freq)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtsadcclkdiv=' + str(freq)
     exec(command)
-
 
 def dithering_enable(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dithering_enable=1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dithering_enable=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dithering_enable=1'
     exec(command)
-
 
 def dithering_disable(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dithering_enable=0'
-    exec(command)
-
-
-def program_viewanasigsel(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.viewanasigsel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dithering_enable=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dithering_enable=0'
     exec(command)
 
 
 def dtd_alert(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.dtd_alert'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.dtd_alert'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.dtd_alert'
     dtdAllert = eval(command)
     return int(dtdAllert)
 
 def dtd_ns_alert(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.dtd_ns_alert'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.dtd_ns_alert'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.dtd_ns_alert'
     dtdnsAllert = eval(command)
     return int(dtdnsAllert)
 
 def dtd_ns_alert_threshold_direction_insert(self, threshold, direction):
     T = (threshold + 64) * 2
     for i in range(NumNsAllert):
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_nsalert_thr_' + str(i) + '=' + str(T)
-        exec(command)
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_nsalert_' + str(i) + '_dir=' + str(direction)
-        exec(command)
+        if self.name != 'atom_lpc':
+            command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_nsalert_thr_' + str(i) + '=' + str(T)
+            exec(command)
+            command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_nsalert_' + str(i) + '_dir=' + str(direction)
+            exec(command)
+        else:
+            command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtd_nsalert_thr_' + str(i) + '=' + str(T)
+            exec(command)
+            command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtd_nsalert_' + str(i) + '_dir=' + str(direction)
+            exec(command)
 
 
 def dtd_sticky_thr_high(self, highLimit):
     T = (highLimit + 64) * 2
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_h=' + str(T)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_h=' + str(T)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtd_sticky_thr_h=' + str(T)
     exec(command)
 
 
 def dtd_sticky_thr_low(self, lowLimit):
     T = (lowLimit + 64) * 2
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_l=' + str(T)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_thr_l=' + str(T)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtd_sticky_thr_l=' + str(T)
     exec(command)
 
 
 def clear_sticky_alert(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtd_sticky_alert_clr=1'
-    exec(command)
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtd_sticky_alert_clr=0'
-    exec(command)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_alert_clr=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.dtd_sticky_alert_clr=0'
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtd_sticky_alert_clr=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtd_sticky_alert_clr=0'
+        exec(command)
 
 
 def ldo1p2_vref_range_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_vref_range_sel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_vref_range_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.ldo1p2_vref_range_sel=' + str(selector)
     exec(command)
 
 
 def ldo1p2_ext_vref_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_ext_vref_sel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_ext_vref_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.ldo1p2_ext_vref_sel=' + str(selector)
     exec(command)
 
 
 def adc_vref_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvrefsel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvrefsel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvrefsel=' + str(selector)
     exec(command)
 
 
 def adc_vref_buf_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvrefbufsel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvrefbufsel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvrefbufsel=' + str(selector)
     exec(command)
 
 
 def adc_supply_buf_vref_ext_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_supply_buf_vref_ext_sel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_supply_buf_vref_ext_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adc_supply_buf_vref_ext_sel=' + str(selector)
     exec(command)
 
 
 def adc_supply_buf_out_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_supply_buf_out_sel=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_supply_buf_out_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adc_supply_buf_out_sel=' + str(selector)
     exec(command)
 
 
 def adcvinsel0_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvinsel0=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvinsel0=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvinsel0=' + str(selector)
     exec(command)
 
 
 def adcdfxextvref_select(self, selector):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.adcdfxextvref=' + str(selector)
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.adcdfxextvref=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.adcdfxextvref=' + str(selector)
     exec(command)
 
 
 def lvrrref_en(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=1'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.lvrref_en=1'
     exec(command)
 
 
 def lvrrref_dis(self):
-    command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=0'
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.lvrref_en=0'
     exec(command)
 
 
