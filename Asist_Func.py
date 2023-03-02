@@ -29,6 +29,7 @@ VinADC = 0.77
 VrefADC = 0.93
 MeasurementsNum = 5
 NumNsAllert = 4
+gen1_diode_num = 6
 
 DiodeNum = {
     "dts0_aon": 1,
@@ -41,7 +42,7 @@ DiodeNum = {
     "dts_gt1": 6,
 }
 
-Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs']
+Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs', 'dtstapcfgfuse']
 
 def update_chosen_mask(self, mask):
     if self.name != 'atom_lpc':

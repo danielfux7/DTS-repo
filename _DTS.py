@@ -240,19 +240,23 @@ def DTS_TAP_Default_Check(self):  # test 1
     dtsName = self.name
     print('In order to use this function, make sure to use xlsx/csv files only!')
     print('The files should have 2 columns:')
-    print('The default values file contains the columns : "name" and "default_value" ')
+    print('The default values file contains the columns : "name" and "value" ')
     print('The unit values file contains the columns : "name" and "unit_value" ')
     tapNum = input('Choose the tap for checking \n 0 - dtsfusecfg \n 1 - tapconfig \n 2 - tapstatus \n ')
     while int(tapNum) > 2:
         print("Wrong Number, try again")
         tapNum = input()
 
+    if self.name == 'atom_lpc':
+        tapNum = 5
+    # C:\Users\daniel\fuses_gen1.xlsx
+    # C:\Users\daniel\fuses_gen2.xlsx
     defaultValuePath = input('insert the full path to the defaults values \n')  # C:\Users\daniel\default.xlsx
     defaultData = pd.read_excel(defaultValuePath)
     # print('defaultData: ' + str(defaultData))
 
     defualtNames = list(defaultData.name)
-    defualtValues = list(defaultData.default_value)
+    defualtValues = list(defaultData.value)
 
     #  Filtering the fields :
     for i in range(len(defualtValues)):
@@ -315,14 +319,23 @@ def DTS_TAP_Default_Check(self):  # test 1
 def DTS_write_values_func(self):
     print_for_fuses()
     tapNum = get_number_for_tap()
+    if self.name == 'atom_lpc':
+        tapNum = 5
     valuesPath = input('insert the full path to the file with the values  \n')  # C:\Users\daniel\default.xlsx
     data = pd.read_excel(valuesPath)
 
     dataNames = list(data.name)
     dataValues = list(data.value)
 
+    #  Filtering the fields :
+    for i in range(len(dataValues)):
+        string = dataValues[i]
+        index = string.find('h')
+        dataValues[i] = int(string[index + 1:], 16)
+
     for i in range(len(dataNames)):
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.' + Taps[int(tapNum)] + '.' + unitNames[i] + "=" + unit_value[i]
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.' + Taps[int(tapNum)] + '.' + dataNames[i] + "=" \
+                  + str(dataValues[i])
         exec(command)
 
 
@@ -335,18 +348,26 @@ def DTS_TAP_Write_Read_Check(self):  # test 2
 ## CRI Defualt Check ##
 def DTS_CRI_Default_Check(self):  # test 3
     # get the CRI commands
-    CRIcommandsPath = input('insert the full path to the CRI file \n')  # C:\Users\daniel\CRI_commands.xlsx
+    CRIcommandsPath = input('insert the full path to the CRI file \n')  # C:\Users\daniel\fuses_gen2.xlsx
     CRIData = pd.read_excel(CRIcommandsPath)
-    fuseNames = list(CRIData.FuseName)
+    fuseNames = list(CRIData.name)
     CRICommand = list(CRIData.CRICommand)
     CRIValues = list(CRIData.value)
-    CRIValues = [int(x) for x in CRIValues]
+    #CRIValues = [int(x) for x in CRIValues]
 
     unitValues = []
+
+    #  Filtering the fields :
+    for i in range(len(CRIValues)):
+        string = CRIValues[i]
+        index = string.find('h')
+        CRIValues[i] = int(string[index + 1:], 16)
 
     for i in range(len(fuseNames)):
         command = 'cpu.cdie.soc_cr_wrapper.' + self.name + '.inst0.' + CRICommand[i]
         unitValues.append(eval(command))
+
+
 
     status = []
     for i in range(len(fuseNames)):
@@ -366,12 +387,19 @@ def DTS_CRI_Default_Check(self):  # test 3
 ## Write Values to CRI Registers ##
 # Description: this function will insert values to CRI registers
 def DTS_write_values_to_CRI(self):
-    valuesPath = input('insert the full path to the CRI file  \n')  # C:\Users\daniel\CRI_commands.xlsx
+    valuesPath = input('insert the full path to the CRI file  \n')  # C:\Users\daniel\fuses_gen2.xlsx
     data = pd.read_excel(valuesPath)
 
     CRICommand = list(data.CRICommand)
     CRIValues = list(data.value)
     #CRIValues = [int(x) for x in CRIValues]
+
+    #  Filtering the fields :
+    for i in range(len(CRIValues)):
+        string = CRIValues[i]
+        index = string.find('h')
+        CRIValues[i] = int(string[index + 1:], 16)
+
 
     for i in range(len(CRICommand)):
         command = 'cpu.cdie.soc_cr_wrapper.' + self.name + '.inst0.' + CRICommand[i] + "=" + str(CRIValues[i])
