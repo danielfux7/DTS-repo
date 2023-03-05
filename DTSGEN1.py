@@ -11,6 +11,7 @@ class DTSGEN1(DTS):
     NumOfDiode = 6
     diodesList = []
 
+
     # methods
     def __init__(self):
         _DTSGEN1.__init__(self)
@@ -30,3 +31,11 @@ class DTSGEN1(DTS):
     # test 4
     def PWRON_CATBLK_VREF_VBE_VCOMP_CHECK(self):
         _DTSGEN1.PWRON_CATBLK_VREF_VBE_VCOMP_CHECK(self)
+
+    # test 8
+    def DTS_VCCBGR_CHECK(self):
+        _DTSGEN1.DTS_VCCBGR_CHECK(self)
+
+    # tests 9 and 11
+    def DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en):
+        _DTSGEN1.DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en)

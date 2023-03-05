@@ -23,6 +23,7 @@ OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
             '256_avgen', '512_avgen', '1024_avgen', '2048_avgen']
 FrequenciesDict = {25: 2, 50: 0, 100: 1}
 FrequenciesList = [25, 50, 100]
+temperatureList = [10, 30, 50, 70, 90]
 
 OSRmodesNum = 8
 VinADC = 0.77
@@ -83,12 +84,22 @@ def set_any_tc(self, tc):
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgrtc =' + str(tc)
     exec(command)
 
+
+def set_any_bgradj(self, bgradj):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgradj =' + str(bgradj)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgradj =' + str(bgradj)
+    exec(command)
+
+
 def oneshot_disable(self):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.oneshotmodeen = 0x0'
     else:
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.oneshotmodeen = 0x0'
     exec(command)
+
 
 def oneshot_enable(self):
     if self.name != 'atom_lpc':
@@ -123,7 +134,7 @@ def dts_disable(self):
 
 def all_dts_disable():
     for dts in ListDTS:
-        if self.name != 'atom_lpc':
+        if dts != 'atom_lpc':
             command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
             exec(command)
             command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 0'
@@ -134,9 +145,10 @@ def all_dts_disable():
             command = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.dtsenable = 0'
             exec(command)
 
-def all_dts_enable():
+
+def all_dts_enable(self):
     for dts in ListDTS:
-        if self.name != 'atom_lpc':
+        if dts != 'atom_lpc':
             command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
             exec(command)
             command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 1'
@@ -166,7 +178,30 @@ def rawcode_read(self):
     return int(rawcode)
 
 
+def rawcode_en(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.rawcode_en = 0x1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.rawcode_en = 0x1'
+    exec(command)
+
+
+def rawcode_dis(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.rawcode_en = 0x0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.rawcode_en = 0x0'
+    exec(command)
+
+
 def calculate_slope_and_offset(x, y):
+    coefficients = np.polyfit(x, y, 1)
+    slope = round(coefficients[0])
+    offset = round(coefficients[1])
+    return slope, offset
+
+
+def calculate_slope_and_offset_gen1(x, y):
     coefficients = np.polyfit(x, y, 1)
     slope = round(coefficients[0])
     offset = round(coefficients[1])
@@ -192,15 +227,17 @@ def insert_cattrip_code(self, cattripcode, diode):
 
 
 def insert_slope_offset_to_diode(self, diode, slope, offset):
+    slope_fuse = int(-(slope * pow(2, 12)))
+    offset_fuse = int(offset * 2)
     if self.name != 'atom_lpc':
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.slope_' + str(diode) + '=' + str(slope_fuse)
         exec(command)
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.offset_' + str(diode) + '=' + str(offset_fuse)
         exec(command)
     else:
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.slope_' + str(diode) + '=' + str(slope)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.slope_' + str(diode) + '=' + str(slope_fuse)
         exec(command)
-        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.offset_' + str(diode) + '=' + str(offset)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.offset_' + str(diode) + '=' + str(offset_fuse)
         exec(command)
 
     self.diodesList[diode].slope = slope
@@ -522,6 +559,20 @@ def adcvinsel0_select(self, selector):
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvinsel0=' + str(selector)
     exec(command)
 
+def adcvinbufsel_en(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvinbufsel=3'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvinbufsel=3'
+    exec(command)
+
+
+def adcvinbufsel_dis(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvinbufsel=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvinbufsel=0'
+    exec(command)
 
 def adcdfxextvref_select(self, selector):
     if self.name != 'atom_lpc':

@@ -17,6 +17,11 @@ class Diode:
     bgWaitData = {}
     bgWaitPostTrimData = {}
     ADCclkDivData ={}
+    pretrim_gen1_buf_en = []
+    pretrim_gen1_buf_dis = []
+    posttrim_gen1_buf_en = []
+    posttrim_gen1_buf_dis = []
+
 
 
     def __init__(self, diodeNum):
@@ -39,3 +44,7 @@ class Diode:
         self.bgWaitPost = {}
         self.bgWaitPostTrimData = {}
         self.ADCclkDivData = {25: [], 50: [], 100: []}
+        self.pretrim_gen1_buf_en = []
+        self.pretrim_gen1_buf_dis = []
+        self.posttrim_gen1_buf_en = []
+        self.posttrim_gen1_buf_dis = []

@@ -71,5 +71,60 @@ def PWRON_CATBLK_VREF_VBE_VCOMP_CHECK(self):
         Asist_Func.dts_disable(self)
 
 
-def DTS_RD_VBE_Check(self):
+def DTS_VCCBGR_CHECK(self):
+    # measures = [bgadj , tc]
+    measures = [[0, 4], [0, 3], [0, 0], [1, 4], [1, 3], [1, 0], [2, 4], [2, 3], [2, 0], [3, 4], [3, 3], [3, 0]],
+    Asist_Func.dts_disable(self)
+    Asist_Func.program_viewanasigsel(self, 0)  # Select the analog dft mux to out the VCC_BGR from bgcore
+    Asist_Func.dts_enable(self)
+    for i in range(len(measures)):
+        Asist_Func.set_any_bgradj(self, measures[i][0])
+        Asist_Func.set_any_tc(self, measures[i][1])
+        result = Asist_Func.measure_analog_func(self, 0) ### TBD in the measure analog func need to return the measure
+        measures[i].append(result)
+    bgradj = [item[0] for item in measures]
+    bgrtc = [item[1] for item in measures]
+    result = [item[2] for item in measures]
+    final = {'bgradj': bgradj, 'bgrtc': bgrtc, 'result': result}
+    print(final)
 
+
+def DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en):
+    Asist_Func.dts_disable(self)
+    if buf_en:
+        Asist_Func.adcvinbufsel_en(self)
+    else:
+        Asist_Func.adcvinbufsel_dis(self)
+    Asist_Func.rawcode_en(self)
+    Asist_Func.update_chosen_mask(self, 63)  # 6'h3F
+    Asist_Func.dts_enable(self)
+    data = []  # data = [temperature, raw code]
+    for diode in range(gen1_diode_num):
+        #if Asist_Func.valid_diode_check(self, diode):
+        if True:  ###### for debug!!!!
+            rawcode = Asist_Func.read_temperature_code(self, diode)
+            data = [temperature, rawcode]
+            if buf_en:
+                self.diodesList[diode].pretrim_gen1_buf_en.append(data)
+                print(self.diodesList[diode].pretrim_gen1_buf_en)
+            else:
+                self.diodesList[diode].pretrim_gen1_buf_dis.append(data)
+                print(self.diodesList[diode].pretrim_gen1_buf_dis)
+        else:
+            print(str(diode) + ' is invalid')
+
+
+def DTS_trim_gen1(self, buf_en):
+    for diode in range(gen1_diode_num):
+        if Asist_Func.valid_diode_check(self,diode):
+            if buf_en:  #
+                temperatures = [item[0] for item in self.diodesList[diode].pretrim_gen1_buf_en]
+                rawcodes = [item[1] for item in self.diodesList[diode].pretrim_gen1_buf_en]
+            else:
+                temperatures = [item[0] for item in self.diodesList[diode].pretrim_gen1_buf_dis]
+                rawcodes = [item[1] for item in self.diodesList[diode].pretrim_gen1_buf_dis]
+
+            slope, offset = Asist_Func.calculate_slope_and_offset(rawcodes, temperatures)
+            print('slope: ' + str(slope))
+            print('offset: ' + str(offset))
+            Asist_Func.insert_slope_offset_to_diode(self, diode, slope, offset)
