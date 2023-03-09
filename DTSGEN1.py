@@ -6,10 +6,11 @@ class DTSGEN1(DTS):
     # Variables
     name = "dts"
     temperature = 25 # default
-    Step1TrimValue = -1
-    Step2TrimValue = -1
     NumOfDiode = 6
     diodesList = []
+    adc_linearity_check = []  # [voltage applied , raw code ]
+    adc_slope = 0
+    adc_offset = 0
 
 
     # methods
@@ -17,8 +18,8 @@ class DTSGEN1(DTS):
         _DTSGEN1.__init__(self)
 
     # test 1
-    def CATBLK_VREF_VBE_VCOMP_CHECK(self):
-        _DTSGEN1.CATBLK_VREF_VBE_VCOMP_CHECK(self)
+    def DTS_GEN1_TAP_DEFAULT_CHECK(self):
+        _DTSGEN1.DTS_GEN1_TAP_DEFAULT_CHECK(self)
 
     # test 2
     def PWRON_DTS_RD_VBE_Check(self):
@@ -39,3 +40,36 @@ class DTSGEN1(DTS):
     # tests 9 and 11
     def DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en):
         _DTSGEN1.DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en)
+
+    # Trim the diodes
+    def DTS_trim_gen1(self, buf_en):
+        _DTSGEN1.DTS_trim_gen1(self, buf_en)
+
+    # tests 10 and 12
+    def DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en):
+        _DTSGEN1.DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en)
+
+    # test 13
+    def DTS_ADC_Linearity_check(self):
+        _DTSGEN1.DTS_ADC_Linearity_check(self)
+
+    # test 14
+    def DTS_CAT_AUTOTRIM_CHECK(self, temperature):
+        _DTSGEN1.DTS_CAT_AUTOTRIM_CHECK(self,temperature)
+
+    # test 15
+    def DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, target_temperature):
+        _DTSGEN1.DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, target_temperature)
+
+    # test 16
+    def CATBLK_VREF_VBE_VCOMP_CHECK(self):
+        _DTSGEN1.CATBLK_VREF_VBE_VCOMP_CHECK(self)
+
+    # test 20
+    def DTS_CATTRIP_ALERT_CHK_EXTVBE(self):
+        _DTSGEN1.DTS_CATTRIP_ALERT_CHK_EXTVBE(self)
+
+    # test 21
+    def DTS_AVG_SUPLKG_CHECK_ONESHOTMODE(self):
+        _DTSGEN1.DTS_AVG_SUPLKG_CHECK_ONESHOTMODE(self)
+

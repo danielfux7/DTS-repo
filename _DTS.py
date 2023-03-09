@@ -48,7 +48,7 @@ def __init__(self):
     self.name = name
     self.NumOfDiode = DiodeNum[name]
     for i in range(DiodeNum[name]):
-        self.diodesList.append(Diode(i))
+        self.diodesList.append(Diode(i, 2))
 
 
 def method(self):
@@ -476,19 +476,19 @@ def DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait):  # test 5
     print('debug check 1')
 
     # Do the avg calc and Store the date in the right diode:
-    for i in range(self.NumOfDiode):
+    for diode in range(self.NumOfDiode):
         # if validcodecheck[i]:
         if True:  ########## for debug:
-            meanCodeArr[i] = sumCodeArr[i] / MeasurementsNum
-            diodeData = [temp,  meanCodeArr[i], minCodeArr[i], maxCodeArr[i]]
+            meanCodeArr[diode] = sumCodeArr[diode] / MeasurementsNum
+            diodeData = [temp,  meanCodeArr[diode], minCodeArr[diode], maxCodeArr[diode]]
             if bgWait == 0:
-                self.diodesList[i].pretrimData.append(diodeData)
+                self.diodesList[diode].pretrimData.append(diodeData)
             else:
                 diodeData.append(bgWait)  # this data is from the bg wait code check
                 if bgWait in self.diodesList[diode].bgWaitData:
                     self.diodesList[diode].bgWaitData[bgWait].append(diodeData)
                 else:
-                    self.diodesList[diode].bgWaitData.update({bgWait: diodeData})
+                    self.diodesList[diode].bgWaitData.update({bgWait: [diodeData]})
         else:
             meanCodeArr[i] = 'invalid diode'
             self.diodesList[i].valid = False
@@ -621,12 +621,16 @@ def DTS_cat_trim_rawcode(self, cattrip_temperature):
     #  calculation of slope and off set
     for diode in range(self.NumOfDiode):
         if self.diodesList[diode].valid:
-            temperatures = [item[0] for item in self.diodesList[diode].cat2PointsTrimData]
-            rawcodes = [item[1] for item in self.diodesList[diode].cat2PointsTrimData]
+            if self.diodesList[diode].gen == 2:
+                temperatures = [item[0] for item in self.diodesList[diode].cat2PointsTrimData]
+                rawcodes = [item[1] for item in self.diodesList[diode].cat2PointsTrimData]
+            else:
+                temperatures = [item[0] for item in self.diodesList[diode].catAutoTrimData]
+                rawcodes = [item[1] for item in self.diodesList[diode].catAutoTrimData]
             cat_slope, cat_offset = Asist_Func.calculate_slope_and_offset(rawcodes, temperatures)
             Asist_Func.insert_cat_slope_offset_to_diode(self, diode, cat_slope, cat_offset)
             cattripcode = Asist_Func.convert_temperature_to_rawcode(cattrip_temperature, cat_slope, cat_offset)
-            Asist_Func.insert_cattrip_code(self, cattripcode ,diode)
+            Asist_Func.insert_cattrip_code(self, cattripcode, diode)
     print('finish cat trim')
 
 
@@ -639,7 +643,7 @@ def DTS_postcalib_catblk_trim_check(self, temperature, cattrip_temperature):  # 
         catSlope = self.diodesList[diode].catSlope
         catOffset = self.diodesList[diode].catOffset
         cattripcode = Asist_Func.convert_temperature_to_rawcode(cattrip_temperature, catSlope, catOffset)
-        Asist_Func.insert_cattrip_code(self, cattripcode,diode)  # program the cattrip trim value
+        Asist_Func.insert_cattrip_code(self, cattripcode, diode)  # program the cattrip trim value
         Asist_Func.program_digital_viewpin_o_digital_1(self, 0xd)
         Asist_Func.dts_disable(self)
         catAllert = Asist_Func.cattrip_alert(self)

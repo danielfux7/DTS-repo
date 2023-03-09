@@ -2,6 +2,7 @@
 
 class Diode:
     pretrimData = []  # [Temperature, mean, max , min]
+    gen = 0
     diodeNum = -1
     valid = True
     slope = -1
@@ -24,8 +25,9 @@ class Diode:
 
 
 
-    def __init__(self, diodeNum):
+    def __init__(self, diodeNum, gen):
         self.diodeNum = diodeNum
+        self.gen = gen
         self.posttrimData = {
             '256_avgdis': [],
             '512_avgdis': [],

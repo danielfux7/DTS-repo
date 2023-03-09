@@ -19,11 +19,16 @@ Mega =  1000000
 ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
 listGEN1DTS=['par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
              'par_sa_pma1_core1_dts0', 'atom_lpc']
+ListAllDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1',
+              'par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
+              'par_sa_pma1_core1_dts0', 'atom_lpc'
+              ]
 OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
             '256_avgen', '512_avgen', '1024_avgen', '2048_avgen']
 FrequenciesDict = {25: 2, 50: 0, 100: 1}
 FrequenciesList = [25, 50, 100]
 temperatureList = [10, 30, 50, 70, 90]
+
 
 OSRmodesNum = 8
 VinADC = 0.77
@@ -133,7 +138,7 @@ def dts_disable(self):
         exec(command)
 
 def all_dts_disable():
-    for dts in ListDTS:
+    for dts in ListAllDTS:
         if dts != 'atom_lpc':
             command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
             exec(command)
@@ -147,7 +152,7 @@ def all_dts_disable():
 
 
 def all_dts_enable(self):
-    for dts in ListDTS:
+    for dts in ListAllDTS:
         if dts != 'atom_lpc':
             command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
             exec(command)
@@ -358,13 +363,22 @@ def read_cattrip_fsm_state(self):
     return int(cattripFsmState)
 
 
-def read_cattripcode_out(self,diode):
+def read_cattripcode_out(self, diode):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_out_' + str(diode)
     else:
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.cattripcode_out_' + str(diode)
     cattripCode = eval(command)
     return int(cattripCode)
+
+
+def read_cattripcode_error(self, diode):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.cattripcode_error_' + str(diode)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.cattripcode_error_' + str(diode)
+    errorCode = eval(command)
+    return int(errorCode)
 
 
 def enable_trim_neg_temperature(self):
@@ -559,6 +573,15 @@ def adcvinsel0_select(self, selector):
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvinsel0=' + str(selector)
     exec(command)
 
+
+def adcvinsel1_select(self, selector):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvinsel1=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvinsel1=' + str(selector)
+    exec(command)
+
+
 def adcvinbufsel_en(self):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvinbufsel=3'
@@ -582,6 +605,14 @@ def adcdfxextvref_select(self, selector):
     exec(command)
 
 
+def anadfxinen_select(self, selector):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.anadfxinen=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.anadfxinen=' + str(selector)
+    exec(command)
+
+
 def lvrrref_en(self):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=1'
@@ -600,9 +631,14 @@ def lvrrref_dis(self):
 
 # In this function, you need to implement the measurement method according to your measurement device
 def measure_analog_func(self, analog_view_num):
-    input() # need to implement the Evatar
+    input()  # need to implement the Evatar
 
 
 # In this function, you need to implement the measurement method according to your measurement device
 def measure_digital_func(self, digital_view_num):
     input() # need to implement the Evatar
+
+
+# In this function, you need to implement the voltage implementation method according to your device
+def apply_voltage_i_ana_dfx_1(voltage):
+    input()  # need to implement the Evatar
