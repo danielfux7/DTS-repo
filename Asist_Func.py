@@ -526,6 +526,30 @@ def ldo1p2_vref_range_select(self, selector):
     exec(command)
 
 
+def vrefldo_vref_range_sel(self, selector):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.vrefldo_vref_range_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.vrefldo_vref_range_sel=' + str(selector)
+    exec(command)
+
+
+def adc_vrefldo_out_sel(self, selector):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_vrefldo_out_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adc_vrefldo_out_sel=' + str(selector)
+    exec(command)
+
+
+def ldo1p2_out_sel(self, selector):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_out_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.ldo1p2_out_sel=' + str(selector)
+    exec(command)
+
+
 def ldo1p2_ext_vref_select(self, selector):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.ldo1p2_ext_vref_sel=' + str(selector)
@@ -539,6 +563,14 @@ def adc_vref_select(self, selector):
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adcvrefsel=' + str(selector)
     else:
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adcvrefsel=' + str(selector)
+    exec(command)
+
+
+def adc_vrefldo_ext_vref_sel(self, selector):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_vrefldo_ext_vref_sel=' + str(selector)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adc_vrefldo_ext_vref_sel=' + str(selector)
     exec(command)
 
 
@@ -642,3 +674,8 @@ def measure_digital_func(self, digital_view_num):
 # In this function, you need to implement the voltage implementation method according to your device
 def apply_voltage_i_ana_dfx_1(voltage):
     input()  # need to implement the Evatar
+
+
+# In this function, you need to implement the temperature implementation method according to your device
+def temperature_change(temperature):
+    print('The new temperatue is ' + str(temperature))

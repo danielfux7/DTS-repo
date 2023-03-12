@@ -13,6 +13,7 @@ class DTS:
     Step2TrimValue = -1
     NumOfDiode = -1
     diodesList = []
+    gen = 2
 
 
     # methods
@@ -103,8 +104,8 @@ class DTS:
 
     ## Post Calib Catblk Check ##
     # Description:
-    def postcalib_catblk_trim_check(self, temperature, cattrip_temperature):  # test 9
-        _DTS.DTS_postcalib_catblk_trim_check(self, temperature, cattrip_temperature)
+    def postcalib_catblk_trim_check(self, temperature_start_point, cattrip_temperature):  # test 9
+        _DTS.DTS_postcalib_catblk_trim_check(self, temperature_start_point, cattrip_temperature)
 
     ## BG wait time check ##
     # Description:

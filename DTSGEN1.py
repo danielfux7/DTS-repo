@@ -11,6 +11,7 @@ class DTSGEN1(DTS):
     adc_linearity_check = []  # [voltage applied , raw code ]
     adc_slope = 0
     adc_offset = 0
+    gen = 1
 
 
     # methods
@@ -57,9 +58,14 @@ class DTSGEN1(DTS):
     def DTS_CAT_AUTOTRIM_CHECK(self, temperature):
         _DTSGEN1.DTS_CAT_AUTOTRIM_CHECK(self,temperature)
 
+    # test 14.5
+    def DTS_CAT_TRIM_GEN1(self, cattrip_temperature):
+        _DTSGEN1.DTS_CAT_TRIM_GEN1(self, cattrip_temperature)
+
     # test 15
-    def DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, target_temperature):
-        _DTSGEN1.DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, target_temperature)
+    def DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, temperature_start_point,target_temperature):
+        pass
+        #_DTSGEN1.DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, temperature_start_point, target_temperature)
 
     # test 16
     def CATBLK_VREF_VBE_VCOMP_CHECK(self):

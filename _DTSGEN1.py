@@ -21,7 +21,7 @@ def __init__(self):
     self.name = listGEN1DTS[dts_num]
     self.NumOfDiode = 6
     for i in range(6):
-        self.diodesList.append(Diode(i,1))
+        self.diodesList.append(Diode(i))
 
 
 ## catblk vref vbe vcomp check ## test 1
@@ -176,7 +176,7 @@ def DTS_ADC_Linearity_check(self):
     for  i in range(len(voltage_applied)):
         Asist_Func.apply_voltage_i_ana_dfx_1(voltage_applied[i])
         rawcode.append(Asist_Func.read_temperature_code(self, 0))
-        data = [voltage[i], rawcode[i]]
+        data = [voltage_applied[i], rawcode[i]]
         self.adc_linearity_check.append(data)
 
     self.adc_slope, self.adc_offset = Asist_Func.calculate_slope_and_offset(voltage_applied,rawcode)
@@ -195,7 +195,8 @@ def DTS_CAT_AUTOTRIM_CHECK(self, temperature):
         Asist_Func.dts_enable(self)
         Asist_Func.enable_dts_cattrip_auto_trim_fsm(self)
         while Asist_Func.read_cattrip_fsm_state(self) != 3:
-            continue
+            #continue
+            break  ##### for debug!!
         data = []  # data = [temperature cattrip_code cattrip_error]
         code = Asist_Func.read_cattripcode_out(self, diode)
         error = Asist_Func.read_cattripcode_error(self, diode)
@@ -203,12 +204,12 @@ def DTS_CAT_AUTOTRIM_CHECK(self, temperature):
         self.diodesList[diode].catAutoTrimData.append(data)
         Asist_Func.dts_disable(self)
 
-def DTS_CAT_TRIM_GEN1(self):
+def DTS_CAT_TRIM_GEN1(self, cattrip_temperature):
     _DTS.DTS_cat_trim_rawcode(self, cattrip_temperature)
 
 
-def DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, target_temperature):
-    pass
+def DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, temperature_start_point, target_temperature):
+    _DTS.DTS_postcalib_catblk_trim_check(self, temperature_start_point, target_temperature)
 
 
 def CATBLK_VREF_VBE_VCOMP_CHECK(self):

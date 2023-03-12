@@ -48,7 +48,7 @@ def __init__(self):
     self.name = name
     self.NumOfDiode = DiodeNum[name]
     for i in range(DiodeNum[name]):
-        self.diodesList.append(Diode(i, 2))
+        self.diodesList.append(Diode(i))
 
 
 def method(self):
@@ -621,7 +621,7 @@ def DTS_cat_trim_rawcode(self, cattrip_temperature):
     #  calculation of slope and off set
     for diode in range(self.NumOfDiode):
         if self.diodesList[diode].valid:
-            if self.diodesList[diode].gen == 2:
+            if self.gen == 2:
                 temperatures = [item[0] for item in self.diodesList[diode].cat2PointsTrimData]
                 rawcodes = [item[1] for item in self.diodesList[diode].cat2PointsTrimData]
             else:
@@ -629,15 +629,16 @@ def DTS_cat_trim_rawcode(self, cattrip_temperature):
                 rawcodes = [item[1] for item in self.diodesList[diode].catAutoTrimData]
             cat_slope, cat_offset = Asist_Func.calculate_slope_and_offset(rawcodes, temperatures)
             Asist_Func.insert_cat_slope_offset_to_diode(self, diode, cat_slope, cat_offset)
-            cattripcode = Asist_Func.convert_temperature_to_rawcode(cattrip_temperature, cat_slope, cat_offset)
+            cattripcode = Asist_Func.convert_temperature_to_rawcode(cattrip_temperature, cat_slope, cat_offset)  # check
             Asist_Func.insert_cattrip_code(self, cattripcode, diode)
     print('finish cat trim')
 
 
 ## Post Calib Catblk Check ##
-def DTS_postcalib_catblk_trim_check(self, temperature, cattrip_temperature):  # test 9
+def DTS_postcalib_catblk_trim_check(self, temperature_start_point, cattrip_temperature):  # test 9
     Asist_Func.all_dts_disable()  # First disable all the DTS
-    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    if self.gen == 2:
+        Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     for diode in range(self.NumOfDiode):
         Asist_Func.update_diode_mask(self, diode)
         catSlope = self.diodesList[diode].catSlope
@@ -645,23 +646,28 @@ def DTS_postcalib_catblk_trim_check(self, temperature, cattrip_temperature):  # 
         cattripcode = Asist_Func.convert_temperature_to_rawcode(cattrip_temperature, catSlope, catOffset)
         Asist_Func.insert_cattrip_code(self, cattripcode, diode)  # program the cattrip trim value
         Asist_Func.program_digital_viewpin_o_digital_1(self, 0xd)
-        Asist_Func.dts_disable(self)
-        catAllert = Asist_Func.cattrip_alert(self)
-        curr = []
-        #  add to our data set of diode
-        curr = [temperature, catAllert]
-        if cattrip_temperature in self.diodesList[diode].postCalibData:
-            self.diodesList[diode].postCalibData[cattrip_temperature].append(curr)
-        else:
-            self.diodesList[diode].postCalibData.update({cattrip_temperature: curr})
+        Asist_Func.dts_enable(self)
+        temperature_range = cattrip_temperature - temperature_start_point + 4  # size of shmoo temperatures
+        if temperature_range < 0:
+            temperature_range = 3
+        for curr in range(temperature_range):
+            temperature = temperature_start_point + curr
+            Asist_Func.temperature_change(temperature)
+            catAllert = Asist_Func.cattrip_alert(self)
+            #  add to our data set of diode
+            data = [temperature, catAllert]
+            if cattrip_temperature in self.diodesList[diode].postCalibData:
+                self.diodesList[diode].postCalibData[cattrip_temperature].append(data)
+            else:
+                self.diodesList[diode].postCalibData.update({cattrip_temperature: data})
 
-        if catAllert:
-            if temperature < cattrip_temperature:
-                print('alert does not work as expected for temperature: ' + str(temperature))
+            if catAllert:
+                if temperature < cattrip_temperature:
+                    print('alert does not work as expected for temperature: ' + str(temperature))
 
-        else:
-            if temperature >= cattrip_temperature:
-                print('no alert signal for temperature: ' + str(temperature))
+            else:
+                if temperature >= cattrip_temperature:
+                    print('no alert signal for temperature: ' + str(temperature))
 
         Asist_Func.dts_disable(self)
 
@@ -987,30 +993,37 @@ def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
 
 
 
-def vbe_setup_configuration(self):
-    Asist_Func.ldo1p2_vref_range_select(self, 6)
-    Asist_Func.lvrrref_en(self)
-    Asist_Func.ldo1p2_ext_vref_select(self, 1)  # Program 1.2VLDO reference selection mux to take lvrref as reference voltage
-    Asist_Func.adc_vref_select(self, 15)
-    Asist_Func.adc_vref_buf_select(self, 0)  # Bypass Vref_ldo and apply vref_ext as reference to ADC
+def default_setup_configuration(self):
+    Asist_Func.dts_disable(self)
+    Asist_Func.ldo1p2_ext_vref_select(self, 1)  # Program 1.2VLDO reference selection mux to take lvrref as ref voltage
+    Asist_Func.ldo1p2_vref_range_select(self, 4)
+    Asist_Func.ldo1p2_out_sel(self, 2)
+    Asist_Func.adc_vrefldo_ext_vref_sel(self, 0)
+    Asist_Func.vrefldo_vref_range_sel(self, 2)
+    Asist_Func.adc_vrefldo_out_sel(self, 1)
+    Asist_Func.lvrrref_dis(self)  # not really need, because we don't have external voltage, but also harmless
+    Asist_Func.adc_vref_buf_select(self, 1)  # Bypass Vref_ldo and apply vref_ext as reference to ADC
 
-    # Program supply_ldo to take external refrence as input
-    Asist_Func.adc_supply_buf_vref_ext_select(self, 1)
-    Asist_Func.adc_supply_buf_out_select(self, 1)
+    # Program supply_ldo to functional mode
+    Asist_Func.adc_supply_buf_vref_ext_select(self, 0)
+    Asist_Func.adc_supply_buf_out_select(self, 2)
 
     # Apply Vbe as input to AZ buffer through DFC input
     Asist_Func.adcvinsel0_select(self, 0)
 
-    # Program ADC reference mux to select lvref_a
+    # Program ADC reference mux to select Vbgr
     Asist_Func.adcdfxextvref_select(self, 0)
+    Asist_Func.adc_vref_select(self, 0)
+
+   Asist_Func.dts_enable(self)
 
 
 ## VBE check ##
-def DTS_RD_VBE_Check(self):
+def DTS_RD_VBE_Check_ADC(self):
     Asist_Func.all_dts_disable()
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     for diode in range(self.NumOfDiode):
-        vbe_setup_configuration(self)
+        default_setup_configuration(self)
         Asist_Func.diode_sel_ovr_en(self)
         Asist_Func.diode_sel_ovr_val(self, diode)
         Asist_Func.dts_enable(self)
