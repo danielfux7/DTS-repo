@@ -33,6 +33,7 @@ temperatureList = [10, 30, 50, 70, 90]
 OSRmodesNum = 8
 VinADC = 0.77
 VrefADC = 0.93
+primaryCounter = 1024
 MeasurementsNum = 5
 NumNsAllert = 4
 gen1_diode_num = 6
@@ -181,6 +182,42 @@ def rawcode_read(self):
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.adcrawcode'
     rawcode = eval(command)
     return int(rawcode)
+
+
+def bgtrim_done(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.bgtrim_done'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.bgtrim_done'
+    bgtrim_done = eval(command)
+    return int(bgtrim_done)
+
+
+def bgtrim_fsm_state(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.bgtrimfsmstate'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.bgtrimfsmstate'
+    bgtrimfsmstate = eval(command)
+    return int(bgtrimfsmstate)
+
+
+def bgtrim_error(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.bgtrimerror'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.bgtrimerror'
+    bgtrimerror = eval(command)
+    return int(bgtrimerror)
+
+
+def bgtrimcode_calib(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapstatus.bgtrimcode_calib'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapstatus.bgtrimcode_calib'
+    bgtrimcode_calib = eval(command)
+    return int(bgtrimcode_calib)
 
 
 def rawcode_en(self):
@@ -645,6 +682,54 @@ def anadfxinen_select(self, selector):
     exec(command)
 
 
+def bgtrimtarget(self, bgtrimtarget):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.bgtrimtarget=' + str(bgtrimtarget)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.bgtrimtarget=' + str(bgtrimtarget)
+    exec(command)
+
+
+def bgrtrimlowlimit(self, bgrtrimlowlimit):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.bgrtrimlowlimit=' + str(bgrtrimlowlimit)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.bgrtrimlowlimit=' + str(bgrtrimlowlimit)
+    exec(command)
+
+
+def bgrtrimhighlimit(self, bgrtrimhighlimit):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.bgrtrimhighlimit=' + str(bgrtrimhighlimit)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.bgrtrimhighlimit=' + str(bgrtrimhighlimit)
+    exec(command)
+
+
+def bgrtrimrstval(self, bgrtrimrstval):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.bgrtrimrstval=' + str(bgrtrimrstval)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.bgrtrimrstval=' + str(bgrtrimrstval)
+    exec(command)
+
+
+def bgtrim_mode_enable(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.bgtrim_mode=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.bgtrim_mode=1'
+    exec(command)
+
+
+def bgtrim_mode_disable(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.bgtrim_mode=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.bgtrim_mode=0'
+    exec(command)
+
+
 def lvrrref_en(self):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.lvrref_en=1'
@@ -663,8 +748,8 @@ def lvrrref_dis(self):
 
 # In this function, you need to implement the measurement method according to your measurement device
 def measure_analog_func(self, analog_view_num):
-    input()  # need to implement the Evatar
-
+    print('measure voltage with data logger and return the value')  # need to implement the Evatar
+    return 0.5  #### for debug!!
 
 # In this function, you need to implement the measurement method according to your measurement device
 def measure_digital_func(self, digital_view_num):

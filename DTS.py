@@ -14,6 +14,7 @@ class DTS:
     NumOfDiode = -1
     diodesList = []
     gen = 2
+    VBE_check_data = {}
 
 
     # methods
@@ -148,7 +149,9 @@ class DTS:
     def DTS_PRETRIM_BGREF_CHECK(self):
         _DTS.DTS_PRETRIM_BGREF_CHECK(self)
 
-
+    ## VBE check ##
+    def DTS_RD_VBE_Check(self):
+        _DTS.DTS_RD_VBE_Check(self)
 
     ## ana pwr seq view ##
     def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
