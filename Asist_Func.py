@@ -75,6 +75,7 @@ def program_bg_code(self):
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgrtrimcode =' + str(self.Step2TrimValue)
     exec(command)
 
+
 def set_any_bg_trim_code(self, bgtrimcode):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtrimcode =' + str(bgtrimcode)
@@ -746,6 +747,63 @@ def lvrrref_dis(self):
     exec(command)
 
 
+def adc_az_offset_en(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_az_offset_en=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adc_az_offset_en=1'
+    exec(command)
+
+
+def adc_az_offset_dis(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.adc_az_offset_en=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.adc_az_offset_en=0'
+    exec(command)
+
+
+def fusa_en(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.fusa_en=1'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.fusa_en=1'
+    exec(command)
+
+
+def fusa_dis(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.fusa_en=0'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.fusa_en=0'
+    exec(command)
+
+
+def fusa_max_thresh(self, max_thresh):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.fusa_max_thresh=' + str(max_thresh)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.fusa_max_thresh=' + str(max_thresh)
+    exec(command)
+
+
+def fusa_min_thresh(self, min_thresh):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.fusa_min_thresh=' + str(min_thresh)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.fusa_min_thresh=' + str(min_thresh)
+    exec(command)
+
+
+def bgr_out_of_spec(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgr_out_of_spec'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgr_out_of_spec'
+    out_of_spec = eval(command)
+    return int(out_of_spec)
+
+
 # In this function, you need to implement the measurement method according to your measurement device
 def measure_analog_func(self, analog_view_num):
     print('measure voltage with data logger and return the value')  # need to implement the Evatar
@@ -757,8 +815,8 @@ def measure_digital_func(self, digital_view_num):
 
 
 # In this function, you need to implement the voltage implementation method according to your device
-def apply_voltage_i_ana_dfx_1(voltage):
-    input()  # need to implement the Evatar
+def apply_voltage_i_ana_dfx_1(voltage, frequency):
+    print('The new voltage is ' + str(voltage))  # need to implement the Evatar
 
 
 # In this function, you need to implement the temperature implementation method according to your device

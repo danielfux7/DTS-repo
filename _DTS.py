@@ -48,6 +48,9 @@ def __init__(self):
     self.name = name
     self.NumOfDiode = DiodeNum[name]
     self.VBE_check_data = {}
+    self.CATBLK_VREF_VBE_VCOMP_data = {'diode': [], 'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
+                                       'vref_min': [], 'vref_max': []}
+    self.fusa_check = {'step_1': -1, 'step_2': -1, 'step_3': -1}
     for i in range(DiodeNum[name]):
         self.diodesList.append(Diode(i))
 
@@ -848,7 +851,7 @@ def bgr_calib_step1_configuration(self):
     Asist_Func.adc_supply_buf_out_select(self, 2)  # Program ADC supply buffer to select external input reference volt
 
     # apply external voltage
-    Asist_Func.apply_voltage_i_ana_dfx_1(VinADC)
+    Asist_Func.apply_voltage_i_ana_dfx_1(VinADC, 0)
     Asist_Func.adcvinsel0_select(self, 3)
     Asist_Func.anadfxinen_select(3)
 
@@ -872,7 +875,7 @@ def bgr_calib_step2_configuration(self):
     Asist_Func.adc_vref_buf_select(self, 1)  # buf enable - functional mode
 
     # apply external voltage
-    Asist_Func.apply_voltage_i_ana_dfx_1(VinADC)
+    Asist_Func.apply_voltage_i_ana_dfx_1(VinADC, 0)
     Asist_Func.adcvinsel0_select(self, 3)
     Asist_Func.anadfxinen_select(3)
 
@@ -971,3 +974,116 @@ def DTS_RD_VBE_Check(self):
                                 'rawcode_calculation': rawcode_calculation, 'error': error})
 
     print(self.VBE_check_data)
+
+
+## CATBLK_VREF_VBE_VCOMP_CHECK ##
+def CATBLK_VREF_VBE_VCOMP_CHECK(self):
+    codes = [0, 127]
+    Asist_Func.dts_disable(self)
+    for cattrip_code in codes:
+        for diode in range(self.NumOfDiode):
+            self.CATBLK_VREF_VBE_VCOMP_data['diode'].append(diode)
+            self.CATBLK_VREF_VBE_VCOMP_data['cattrip_code'].append(cattrip_code)
+            Asist_Func.insert_cattrip_code(self, cattrip_code, diode)
+            Asist_Func.diode_sel_ovr_en(self)
+            Asist_Func.diode_sel_ovr_val(self, diode)
+            #  measure comp vref
+            Asist_Func.program_viewanasigsel(self, int('0b11010100', 2))
+            Asist_Func.dts_enable(self)
+            self.CATBLK_VREF_VBE_VCOMP_data['comp_vref'].append(Asist_Func.measure_analog_func(self, 4))
+            Asist_Func.dts_disable(self)
+            #  measure comp vbe
+            Asist_Func.program_viewanasigsel(self, int('0b11010011', 2))
+            Asist_Func.dts_enable(self)
+            self.CATBLK_VREF_VBE_VCOMP_data['comp_vbe'].append(Asist_Func.measure_analog_func(self, 3))
+            Asist_Func.dts_disable(self)
+            #  measure vref min
+            Asist_Func.program_viewanasigsel(self, int('0b11010001', 2))
+            Asist_Func.dts_enable(self)
+            self.CATBLK_VREF_VBE_VCOMP_data['vref_min'].append(Asist_Func.measure_analog_func(self, 1))
+            Asist_Func.dts_disable(self)
+            #  measure vref max
+            Asist_Func.program_viewanasigsel(self, int('0b11010010', 2))
+            Asist_Func.dts_enable(self)
+            self.CATBLK_VREF_VBE_VCOMP_data['vref_max'].append(Asist_Func.measure_analog_func(self, 2))
+            Asist_Func.dts_disable(self)
+    print(self.CATBLK_VREF_VBE_VCOMP_data)
+
+
+## ADC Linearity check ##
+def DTS_SD_ADC_Linearity_check(self, voltage_step_size):
+    Asist_Func.dts_disable(self)
+    Asist_Func.adcdfxextvref_select(self, 0)
+    Asist_Func.adc_vref_select(self, 3)
+    Asist_Func.adc_vref_buf_select(self, 0)
+    Asist_Func.adcvinsel0_select(self, 3)
+    Asist_Func.anadfxinen_select(self, 2)
+
+    print('Apply external voltage reference to Ivref_a ')
+    print('Apply external input voltage  to external pin i_ana_dfx_1')
+
+    Asist_Func.oneshot_disable(self)
+    Asist_Func.update_diode_mask(self, 0)
+    Asist_Func.dts_enable(self)
+
+    voltage_applied = np.arange(0.1, 0.9, voltage_step_size)
+    data = []
+    rawcode = []
+    for i in range(len(voltage_applied)):
+        Asist_Func.apply_voltage_i_ana_dfx_1(voltage_applied[i], 0)
+        rawcode.append(Asist_Func.read_temperature_code(self, 0))
+        data = [voltage_applied[i], rawcode[i]]
+        self.adc_linearity_check.append(data)
+
+    self.adc_slope, self.adc_offset = Asist_Func.calculate_slope_and_offset(voltage_applied, rawcode)
+    print('slope: ' + str(self.adc_slope))
+    print('offset: ' + str(self.adc_offset))
+
+    ##### maybe export graph?
+
+
+## DTS full accuracy function  ##
+def DTS_full_accuracy_func(self):
+    for temperature in temperatureList:
+        Asist_Func.temperature_change(temperature)
+        DTS_pretrim_rawcode_readout_particular_temp(self, temperature, 0)
+    Asist_Func.temperature_change(25)
+    DTS_trim_rawcode(self, 0)
+    for temperature in temperatureList:
+        Asist_Func.temperature_change(temperature)
+        DTS_posttrim_temp_readout(self, temperature, 0)
+    Asist_Func.temperature_change(25)
+
+
+## AZ DC shift functionality check ##
+def AZ_DC_shift_func_check(self):
+    Asist_Func.adc_az_offset_en(self)
+    DTS_full_accuracy_func(self)
+
+
+
+## fusa_check ##
+def bgr_fusa_check(self):
+    # STEP 1/2/3
+    bgrtrimcodes = [self.Step2TrimValue, 11, 21]
+    pass_results = [0, 1, 1]
+    test_results = [-1, -1, -1]
+    for i in range(3):
+        Asist_Func.dts_disable(self)
+        Asist_Func.oneshot_enable(self)
+        Asist_Func.set_any_bg_trim_code(self, bgrtrimcodes[i])
+        Asist_Func.update_diode_mask(self, 0)
+        Asist_Func.fusa_en(self)
+        Asist_Func.fusa_max_thresh(self, 677)
+        Asist_Func.fusa_min_thresh(self, 661)
+        Asist_Func.dts_enable(self)
+        if Asist_Func.bgr_out_of_spec(self) == pass_results[i]:
+            test_results[i] = 1  # step passed
+        else:
+            test_results[i] = 0  # step no passed
+
+    self.fusa_check['step_1'] = test_results[0]
+    self.fusa_check['step_2'] = test_results[1]
+    self.fusa_check['step_3'] = test_results[2]
+
+    print(self.fusa_check)

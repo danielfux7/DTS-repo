@@ -13,8 +13,13 @@ class DTS:
     Step2TrimValue = -1
     NumOfDiode = -1
     diodesList = []
+    adc_linearity_check = []  # [voltage applied , raw code ]
+    adc_slope = 0
+    adc_offset = 0
     gen = 2
     VBE_check_data = {}
+    CATBLK_VREF_VBE_VCOMP_data = {}
+    fusa_check = {}
 
 
     # methods
@@ -156,6 +161,20 @@ class DTS:
     ## ana pwr seq view ##
     def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
         _DTS.ANA_PWR_SEQ_VIEW(self, viewpin1Signal)
+
+    ## CATBLK_VREF_VBE_VCOMP_CHECK ##
+    def CATBLK_VREF_VBE_VCOMP_CHECK(self):
+        _DTS.CATBLK_VREF_VBE_VCOMP_CHECK(self)
+
+    ## ADC Linearity check ##
+    def DTS_SD_ADC_Linearity_check(self, voltage_step_size):
+        _DTS.DTS_SD_ADC_Linearity_check(self, voltage_step_size)
+
+    ## fusa_check ##
+    def bgr_fusa_check(self):
+        _DTS.bgr_fusa_check(self)
+
+
 
 if __name__ == '__main__':
     pass

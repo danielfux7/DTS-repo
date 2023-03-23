@@ -174,7 +174,7 @@ def DTS_ADC_Linearity_check(self):
     data = []
     rawcode = []
     for  i in range(len(voltage_applied)):
-        Asist_Func.apply_voltage_i_ana_dfx_1(voltage_applied[i])
+        Asist_Func.apply_voltage_i_ana_dfx_1(voltage_applied[i], 0)
         rawcode.append(Asist_Func.read_temperature_code(self, 0))
         data = [voltage_applied[i], rawcode[i]]
         self.adc_linearity_check.append(data)
@@ -243,7 +243,7 @@ def DTS_CATTRIP_ALERT_CHK_EXTVBE(self):
     Asist_Func.program_digital_viewpin_o_digital_1(self, 14)
     Asist_Func.dts_enable(self)
     for voltage in range(len(voltages_applied)):
-        Asist_Func.apply_voltage_i_ana_dfx_1(voltage)
+        Asist_Func.apply_voltage_i_ana_dfx_1(voltage, 0)
         ## TBD if thermtrip alert is generated: break and voltage and compare with the vbe we get form the RD VBE check
         break
 
