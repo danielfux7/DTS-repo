@@ -20,6 +20,7 @@ class DTS:
     VBE_check_data = {}
     CATBLK_VREF_VBE_VCOMP_data = {}
     fusa_check = {}
+    path = r'C:\Users\daniel\results'
 
 
     # methods

@@ -16,6 +16,7 @@ def create_new_path(old_path, tapNum, dtsName):
     print(new_path)
     return new_path
 
+
 def print_for_fuses():
     print('In order to use this function, make sure to use xlsx/csv files only!')
     print('The files should have 2 columns:')
