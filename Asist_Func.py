@@ -51,6 +51,31 @@ DiodeNum = {
 
 Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs', 'dtstapcfgfuse']
 
+
+def create_new_path_for_func(path, func_name, dts_name):
+    new_path = path + '\\' + str(func_name) + '_' + dts_name + '.xlsx'
+    print(new_path)
+    return new_path
+
+
+def convert_array_to_dict(arr, title_names):
+    if len(arr) == 0:
+        print('Error! array is empty')
+        return
+    new_dict = {}
+    curr_list =[]
+    for i in range(len(arr[0])):
+        curr_list = [item[i] for item in arr]
+        new_dict[title_names[i]] = curr_list
+    print(new_dict)
+    return new_dict
+
+def create_excel_file_for_chosen_func(self, func_name, dict_for_excel):
+    path = create_new_path_for_func(self.path, func_name, self.name)
+    df = pd.DataFrame.from_dict(dict_for_excel)
+    df.to_excel(path)
+
+
 def update_chosen_mask(self, mask):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.active_diode_mask =' + str(mask)
