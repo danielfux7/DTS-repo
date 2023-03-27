@@ -8,17 +8,18 @@ import Diode
 from Diode import *
 
 
-def __init__(self):
+def __init__(self, name):
 
-    while 1:
-        print('Choose the DTS for the tests from the list:')
-        num = input('Press the number of the GEN1 DTS: \n 0 - DTS core0 \n 1 - DTS core1 \n'
-                     ' 2 - DTS core2 \n 3 - DTS core3 \n 4 - DTS atom \n')
-        dts_num = int(num)
-        if -1 < dts_num < 5:  # check the name is correct
-            break
+    # while 1:
+    #     print('Choose the DTS for the tests from the list:')
+    #     num = input('Press the number of the GEN1 DTS: \n 0 - DTS core0 \n 1 - DTS core1 \n'
+    #                  ' 2 - DTS core2 \n 3 - DTS core3 \n 4 - DTS atom \n')
+    #     dts_num = int(num)
+    #     if -1 < dts_num < 5:  # check the name is correct
+    #         break
 
-    self.name = listGEN1DTS[dts_num]
+    # self.name = listGEN1DTS[dts_num]
+    self.name = name
     self.NumOfDiode = 6
     for i in range(6):
         self.diodesList.append(Diode(i))
@@ -155,6 +156,18 @@ def DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en):
                 print(self.diodesList[diode].posttrim_gen1_buf_dis)
         else:
             print(str(diode) + ' is invalid')
+
+## DTS full accuracy function  ##
+def DTS_full_accuracy_func_gen1(self, buf_en):
+    for temperature in temperatureList:
+        Asist_Func.temperature_change(temperature)
+        DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en)
+    Asist_Func.temperature_change(25)
+    DTS_trim_gen1(self, buf_en)
+    for temperature in temperatureList:
+        Asist_Func.temperature_change(temperature)
+        DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en)
+    Asist_Func.temperature_change(25)
 
 
 def DTS_ADC_Linearity_check(self):

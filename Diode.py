@@ -1,4 +1,5 @@
 # Class Diode
+import pickle
 
 class Diode:
     pretrimData = []  # [Temperature, mean, max , min]

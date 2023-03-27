@@ -2,6 +2,7 @@ import namednodes as _namednodes
 import pandas as pd
 import numpy as np
 from config import *
+import pickle
 
 try:
     _sv = _namednodes.sv.get_manager(["socket"])
@@ -21,8 +22,10 @@ listGEN1DTS=['par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_co
              'par_sa_pma1_core1_dts0', 'atom_lpc']
 ListAllDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1',
               'par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
-              'par_sa_pma1_core1_dts0', 'atom_lpc'
-              ]
+              'par_sa_pma1_core1_dts0', 'atom_lpc']
+
+DTS_dict = {'dts0_aon': 0, 'dts1': 0, 'dts2': 0}
+
 OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
             '256_avgen', '512_avgen', '1024_avgen', '2048_avgen']
 FrequenciesDict = {25: 2, 50: 0, 100: 1}

@@ -2,6 +2,7 @@
 import _DTSGEN1
 from _DTSGEN1 import *
 
+
 class DTSGEN1(DTS):
     # Variables
     name = "dts"
@@ -15,8 +16,8 @@ class DTSGEN1(DTS):
 
 
     # methods
-    def __init__(self):
-        _DTSGEN1.__init__(self)
+    def __init__(self, name):
+        _DTSGEN1.__init__(self, name)
 
     # test 1
     def DTS_GEN1_TAP_DEFAULT_CHECK(self):

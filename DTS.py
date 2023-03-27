@@ -3,6 +3,8 @@ import namednodes as _namednodes
 from config import *
 import _DTS
 from _DTS import *
+import Diode
+from Diode import *
 
 
 class DTS:
@@ -24,8 +26,8 @@ class DTS:
 
 
     # methods
-    def __init__(self):
-        _DTS.__init__(self)
+    def __init__(self, name):
+        _DTS.__init__(self, name)
 
     def method(self):
         _DTS.method(self)
@@ -35,14 +37,14 @@ class DTS:
     # The function will get BG TRIM on of the following strings:
     # dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1
     def bg_trim_step1(self):
-        _DTS.bg_trim_step1(self)
+        _DTS.DTS_bg_trim_step1(self)
 
     ## BG TRIM STEP 2 ##
     # Description:
     # The function will get BG TRIM on of the following strings:
     # dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1
     def bg_trim_step2(self):
-        _DTS.bg_trim_step2(self)
+        _DTS.DTS_bg_trim_step2(self)
 
     ## Tap Defualt Check ##
     # Description:

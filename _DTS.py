@@ -31,11 +31,11 @@ def get_number_for_tap():
     return tapNum
 
 
-def __init__(self):
+def __init__(self, name):
 
     while 1:
-        print('Choose the DTS for the tests from the list:')
-        name = input('dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1 \n')
+        # print('Choose the DTS for the tests from the list:')
+        # name = input('dts0_aon, dts1, dts2, dts3, dts_ccf0 , dts_ccf1, dts_gt0, dts_gt1 \n')
         print(name)
 
         if type(name) != str:  # check if string
@@ -362,7 +362,6 @@ def DTS_posttrim_temp_readout(self, temperature, bgWait):  # test 6
                 curr = [temperature, measTemperature, tempError]
                 if bgWait == 0:
                     self.diodesList[diode].posttrimData[OSRmodes[i]].append(curr)
-
                 else:
                     if bgWait in self.diodesList[diode].bgWaitData:
                         if bgWait in self.diodesList[diode].bgWaitPost:
@@ -376,7 +375,7 @@ def DTS_posttrim_temp_readout(self, temperature, bgWait):  # test 6
 
         Asist_Func.dts_disable(self)
     Asist_Func.all_dts_disable()
-    print('finish post trim readout')
+    print('finish one iteration of post trim readout ')
 
 ## Cat auto trim Check ##
 def DTS_cat_autotrim_check(self, temperature):  # test 7
@@ -476,23 +475,35 @@ def DTS_postcalib_catblk_trim_check(self, temperature_start_point, cattrip_tempe
         for curr in range(temperature_range):
             temperature = temperature_start_point + curr
             Asist_Func.temperature_change(temperature)
-            catAllert = Asist_Func.cattrip_alert(self)
-            #  add to our data set of diode
-            data = [temperature, catAllert]
-            if cattrip_temperature in self.diodesList[diode].postCalibData:
-                self.diodesList[diode].postCalibData[cattrip_temperature].append(data)
-            else:
-                self.diodesList[diode].postCalibData.update({cattrip_temperature: data})
+            if self.gen == 2:
+                catAllert = Asist_Func.cattrip_alert(self)  # for gen 2
+            else:  # for gen1
+                catAllert = Asist_Func.measure_digital_func(self, 0xd)
+
 
             if catAllert:
                 if temperature < cattrip_temperature:
                     print('alert does not work as expected for temperature: ' + str(temperature))
+                    status = False
+                else:
+                    status = True
 
-            else:
+            else:  ## no cat siganl
                 if temperature >= cattrip_temperature:
                     print('no alert signal for temperature: ' + str(temperature))
+                    status = False
+                else:
+                    status = True
 
+            # add to our data set of diode
+            data = [temperature, catAllert, status]
+            if cattrip_temperature in self.diodesList[diode].postCalibData:
+                self.diodesList[diode].postCalibData[cattrip_temperature].append(data)
+            else:
+                self.diodesList[diode].postCalibData.update({cattrip_temperature: data})
         Asist_Func.dts_disable(self)
+
+
 
 
 ## BG wait time check ##
@@ -1044,15 +1055,15 @@ def DTS_SD_ADC_Linearity_check(self, voltage_step_size):
 
 
 ## DTS full accuracy function  ##
-def DTS_full_accuracy_func(self):
+def DTS_full_accuracy_func(self, bgwait):
     for temperature in temperatureList:
         Asist_Func.temperature_change(temperature)
-        DTS_pretrim_rawcode_readout_particular_temp(self, temperature, 0)
+        DTS_pretrim_rawcode_readout_particular_temp(self, temperature, bgwait)
     Asist_Func.temperature_change(25)
-    DTS_trim_rawcode(self, 0)
+    DTS_trim_rawcode(self, bgwait)
     for temperature in temperatureList:
         Asist_Func.temperature_change(temperature)
-        DTS_posttrim_temp_readout(self, temperature, 0)
+        DTS_posttrim_temp_readout(self, temperature, bgwait)
     Asist_Func.temperature_change(25)
 
 
