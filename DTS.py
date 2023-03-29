@@ -20,6 +20,12 @@ class DTS:
     adc_offset = 0
     gen = 2
     VBE_check_data = {}
+    sleep_delay_check_data = {}
+    bg_wait_time_data = {}
+    ADCclkDivData = {}
+    DTD_NS_alert_direction_0_data ={}
+    DTD_NS_alert_direction_1_data = {}
+    DTD_sticky_alert_data = {}
     CATBLK_VREF_VBE_VCOMP_data = {}
     fusa_check = {}
     path = r'C:\Users\daniel\results'
@@ -96,6 +102,10 @@ class DTS:
     def posttrim_temp_readout(self, temperature, bgWait):  # test 6
         _DTS.DTS_posttrim_temp_readout(self, temperature, bgWait)
 
+    ## DTS full accuracy function  ##
+    def DTS_full_accuracy_func(self, bgwait):
+        _DTS.DTS_full_accuracy_func(self, bgwait)
+
     ## cat autotrim check ##
     # Description:
     def DTS_cat_autotrim_check(self, temperature):  # test 7
@@ -116,6 +126,10 @@ class DTS:
     def postcalib_catblk_trim_check(self, temperature_start_point, cattrip_temperature):  # test 9
         _DTS.DTS_postcalib_catblk_trim_check(self, temperature_start_point, cattrip_temperature)
 
+    ## DTS full cattrip calib function  ##
+    def DTS_full_cattrip_calib_func(self):
+        _DTS.DTS_full_cattrip_calib_func(self)
+
     ## BG wait time check ##
     # Description:
     def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
@@ -128,8 +142,8 @@ class DTS:
 
     ## sleep delay check ##
     # Description:
-    def SLEEP_DELAY_CHECK(self, sleepTime):  # test 12
-        _DTS.SLEEP_DELAY_CHECK(self, sleepTime)
+    def SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic):  # test 12
+        _DTS.SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic)
 
     ## dynamic skeep delay check ##
     # Description:
@@ -140,6 +154,10 @@ class DTS:
     # Description:
     def ADC_CLK_DIV_TEST(self, temperature):  # test 14
         _DTS.ADC_CLK_DIV_TEST(self, temperature)
+
+    ## AON_OVRD_DTS_FUNC_CHECK ##
+    def AON_OVRD_DTS_FUNC_CHECK(self):  # test 15
+        AON_OVRD_DTS_FUNC_CHECK(self)
 
     ## DTD ns alert test ## test 16
     def DTD_NS_ALERT_TEST(self, temperature, threshold, direction ):

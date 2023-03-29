@@ -49,6 +49,20 @@ def __init__(self, name):
     self.name = name
     self.NumOfDiode = DiodeNum[name]
     self.VBE_check_data = {}
+    self.DTD_NS_alert_direction_0_data = {'thresh_hold': [], 'temperature_alert_generated': [], 'diff_part_a': [],
+                                          'pass_part_a': [], 'temperature_alert_gone': [], 'diff_part_b': [],
+                                          'pass_part_b': []}
+    self.DTD_NS_alert_direction_1_data = {'thresh_hold': [], 'temperature_alert_generated': [], 'diff_part_a': [],
+                                          'pass_part_a': [], 'temperature_alert_gone': [], 'diff_part_b': [],
+                                          'pass_part_b': []}
+    self.DTD_sticky_alert_data = {'thresh_hold_high': [], 'temperature_alert_generated_high': [], 'diff_part_a': [],
+                                  'sticky_alert_part_a': [], 'pass_part_a': [],
+                                  'thresh_hold_low': [], 'temperature_alert_generated_low': [], 'diff_part_b': [],
+                                  'sticky_alert_part_b': [], 'pass_part_b': []}
+    self.sleep_delay_check_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': [],
+                                   'time_expected_dynamic': [], 'time_measured_dynamic': [], 'diff_dyn_time': []}
+    self.bg_wait_time_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': []}
+    self.ADCclkDivData = {25: [], 50: [], 100: []}
     self.CATBLK_VREF_VBE_VCOMP_data = {'diode': [], 'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
                                        'vref_min': [], 'vref_max': []}
     self.fusa_check = {'step_1': -1, 'step_2': -1, 'step_3': -1}
@@ -480,7 +494,6 @@ def DTS_postcalib_catblk_trim_check(self, temperature_start_point, cattrip_tempe
             else:  # for gen1
                 catAllert = Asist_Func.measure_digital_func(self, 0xd)
 
-
             if catAllert:
                 if temperature < cattrip_temperature:
                     print('alert does not work as expected for temperature: ' + str(temperature))
@@ -504,6 +517,18 @@ def DTS_postcalib_catblk_trim_check(self, temperature_start_point, cattrip_tempe
         Asist_Func.dts_disable(self)
 
 
+## DTS full cattrip calib function  ##
+def DTS_full_cattrip_calib_func(self):
+    for temperature in temperatureList:
+        Asist_Func.temperature_change(temperature)
+        DTS_cat_2point_autotrim_check(self, temperature)
+    Asist_Func.temperature_change(25)
+    for cattrip_temperature in cattripTemperatureList:
+        start_point_temperature = cattrip_temperature - 10
+        Asist_Func.temperature_change(start_point_temperature)
+        DTS_cat_trim_rawcode(self, cattrip_temperature)
+        DTS_postcalib_catblk_trim_check(self, start_point_temperature, cattrip_temperature)
+    Asist_Func.temperature_change(25)
 
 
 ## BG wait time check ##
@@ -516,6 +541,14 @@ def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
     Asist_Func.dts_enable(self)
     print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1]')
     print('PASS - The duration b/w the falling an rising edge shall be equal to (waitDelay+1)*10ns')
+    num = input('Enter the time you measured through the scope \n')
+    time_measured = int(num)
+    time_expected = (waitDelay + 1) * 10e-9
+    diff_time = abs(time_expected - time_measured)
+    self.bg_wait_time_data['DTS_name'].append(self.name)
+    self.bg_wait_time_data['time_expected'].append(time_expected)
+    self.bg_wait_time_data['time_measured'].append(time_measured)
+    self.bg_wait_time_data['diff_time'].append(diff_time)
 
 
 ## BG wait code check ##
@@ -525,14 +558,33 @@ def BG_WAIT_CODE_CHECK(self, temperature, bgWait):  # test 12
 
 
 ## sleep delay check ##
-def SLEEP_DELAY_CHECK(self, sleepTime):  # test 12
+def SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic):  # sleepTimeDynamic != so it will be the dynamic test
     Asist_Func.all_dts_disable()
-    Asist_Func.update_chosen_mask(self, 1)
+    Asist_Func.update_chosen_mask(self, 0)
     Asist_Func.program_sleep_timer(self, sleepTime)
     Asist_Func.program_digital_viewpin_o_digital_1(self, 0xc)
     Asist_Func.dts_enable(self)
-    print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1]')
+    print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1] on scope')
     print('PASS - The duration b/w the falling an rising edge shall be equal to (sleepTime*2^12+1000)*10ns')
+    num = input('Enter the time you measured through the scope \n')
+    time_measured = int(num)
+    time_expected = (sleepTime * pow(2, 12) + 1000) * 10e-9
+    diff_time = abs(time_expected - time_measured)
+    self.sleep_delay_check_data['DTS_name'].append(self.name)
+    self.sleep_delay_check_data['time_expected'].append(time_expected)
+    self.sleep_delay_check_data['time_measured'].append(time_measured)
+    self.sleep_delay_check_data['diff_time'].append(diff_time)
+    if sleepTimeDynamic:
+        Asist_Func.program_sleep_timer(self, sleepTimeDynamic)
+        Asist_Func.enable_dynamic_update(self)
+        num = input('Enter the time you measured through the scope for dynamic enable \n')
+        time_measured_dynamic = int(num)
+        time_expected_dynamic = (sleepTimeDynamic * pow(2, 12) + 1000) * 10e-9
+        diff_dyn_time = abs(time_expected_dynamic - time_measured_dynamic)
+        self.sleep_delay_check_data['time_expected_dynamic'].append(time_expected_dynamic)
+        self.sleep_delay_check_data['time_measured_dynamic'].append(time_measured_dynamic)
+        self.sleep_delay_check_data['diff_dyn_time'].append(diff_dyn_time)
+
 
 
 ## dynamic sleep delay check ##
@@ -543,92 +595,133 @@ def DYNAMIC_SLEEP_DELAY_CHECK(self, sleepTime):
     print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1]')
     print('PASS - The duration b/w the falling an rising edge shall be equal to (sleepTime*2^12+1000)*10ns')
 
+
 ## adc clock div test ##
 def ADC_CLK_DIV_TEST(self, temperature, diode):  # test 14
     Asist_Func.all_dts_disable()
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     for freq in FrequenciesList:
         Asist_Func.update_chosen_mask(self, diode)
-        Asist_Func.program_adc_clock_freq(self, FrequenciesDict[freq])
+        Asist_Func.program_adc_clock_freq(self, freq)
         Asist_Func.dts_enable(self)
         if Asist_Func.valid_diode_check(self, diode):  # check some diode you choose
             measTemperature = Asist_Func.read_temperature_code(self, diode)
             tempError = temperature - measTemperature
             curr = [temperature, measTemperature, tempError]
-            self.diodesList[diode].ADCclkDivData[freq].append(curr)
+            self.ADCclkDivData[freq].append(curr)
         else:
             print('invalid diode')
         Asist_Func.dts_disable(self)
 
 
-def get_to_high_temperature_limit_direction_1(self, diode, maxTemperature, threshold, pass_flag):
-    while maxTemperature > Asist_Func.read_temperature_code(self, diode):
-        input('Increase the temperature by step of one and press any key to continue')
-        currTemp = Asist_Func.read_temperature_code(self, diode)
-        print('the current temperature for the diode ' + str(diode) + ' is:')
+## AON_OVRD_DTS_FUNC_CHECK ##
+def AON_OVRD_DTS_FUNC_CHECK(self):
+    Asist_Func.dts_disable(self)
+    Asist_Func.aon_enable(self)
+    for temperature in temperatureList:
+        Asist_Func.temperature_change(temperature)
+        DTS_posttrim_temp_readout(self, temperature, 0)
+    Asist_Func.aon_disable(self)
+
+
+def get_to_high_temperature_limit_direction_1(self, minTemperature, maxTemperature, threshold):
+    Asist_Func.temperature_change(minTemperature)
+    curr = 0
+    while maxTemperature > Asist_Func.read_temperature_code(self, 0):
+        print('increasing the temperature by 1 degree')
+        Asist_Func.temperature_change(minTemperature + curr)
+        currTemp = Asist_Func.read_temperature_code(self, 0)
+        print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
         if Asist_Func.dtd_ns_alert(self):
+            self.DTD_NS_alert_direction_1_data['temperature_alert_generated'].append(currTemp)
+            self.DTD_NS_alert_direction_1_data['diff_part_a'].append(currTemp - threshold)  # might be also negative
             if currTemp < threshold:
-                self.diodesList[diode].PassNsAlertTest = 0
                 print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_1_data['pass_part_a'].append(0)  # no pass part a
+                break
             else:
-                print('NS alert rised as expected for the temperature: ' + str(currTemp))
-                if not pass_flag:
-                    self.diodesList[diode].PassNsAlertTest += 1
-                    pass_flag = 1
+                print('NS alerted when temp crossed the threshhold as expected for the temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_1_data['pass_part_a'].append(1)  # pass part a , need to check what spec?
+                break
+        curr += 1
+    Asist_Func.temperature_change(maxTemperature)  # preparing for part b of the test
 
-def get_to_low_temperature_limit_direction_1(self, diode, minTemperature, threshold, pass_flag):
-    while minTemperature < Asist_Func.read_temperature_code(self, diode):
-        input('Decrease the temperature by step of one and press any key to continue')
-        currTemp = Asist_Func.read_temperature_code(self, diode)
-        print('the current temperature for the diode ' + str(diode) + ' is:')
+
+def get_to_low_temperature_limit_direction_1(self, minTemperature, maxTemperature, threshold):
+    Asist_Func.temperature_change(maxTemperature)
+    curr = 0
+    while minTemperature < Asist_Func.read_temperature_code(self, 0):
+        print('decreasing the temperature by 1 degree')
+        Asist_Func.temperature_change(minTemperature - curr)
+        currTemp = Asist_Func.read_temperature_code(self, 0)
+        print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
         if not Asist_Func.dtd_ns_alert(self):
-            if currTemp > threshold:
-                self.diodesList[diode].PassNsAlertTest = 0
-                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+            self.DTD_NS_alert_direction_1_data['temperature_alert_gone'].append(currTemp)
+            self.DTD_NS_alert_direction_1_data['diff_part_b'].append(currTemp - threshold)  # can be also negative
+            if currTemp >= threshold:
+                print('There is not an alert before we crossed back the threshold temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_1_data['pass_part_b'].append(0)  # no pass part b
+                break
             else:
-                print('NS alert rised as expected for the temperature: ' + str(currTemp))
-                if not pass_flag:
-                    self.diodesList[diode].PassNsAlertTest += 1
-                    pass_flag = 1
+                print('NS alert gone when temp crossed the TH as expected for the temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_1_data['pass_part_b'].append(1)  # pass part b, need to check what spec?
+                break
+        curr += 1
+    Asist_Func.temperature_change(minTemperature)
 
 
-def get_to_high_temperature_limit_direction_0(self, diode, maxTemperature, threshold, pass_flag):
-    while maxTemperature > Asist_Func.read_temperature_code(self, diode):
-        input('Increase the temperature by step of one and press any key to continue')
-        currTemp = Asist_Func.read_temperature_code(self, diode)
-        print('the current temperature for the diode ' + str(diode) + ' is:')
+def get_to_high_temperature_limit_direction_0(self, minTemperature,maxTemperature, threshold):
+    Asist_Func.temperature_change(minTemperature)
+    curr = 0
+    while maxTemperature > Asist_Func.read_temperature_code(self, 0):
+        print('increasing the temperature by 1 degree')
+        Asist_Func.temperature_change(minTemperature + curr)
+        currTemp = Asist_Func.read_temperature_code(self, 0)
+        print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
         if not Asist_Func.dtd_ns_alert(self):
-            if currTemp < threshold:
-                self.diodesList[diode].PassNsAlertTest = 0
-                print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+            self.DTD_NS_alert_direction_0_data['temperature_alert_gone'].append(currTemp)
+            self.DTD_NS_alert_direction_0_data['diff_part_b'].append(currTemp - threshold)  # can be also negative
+            if currTemp <= threshold:
+                print('There is no alert before crossed back the threshold temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_0_data['pass_part_b'].append(0)  # no pass part a
+                break
             else:
-                print('NS alert rised as expected for the temperature: ' + str(currTemp))
-                if not pass_flag:
-                    self.diodesList[diode].PassNsAlertTest += 1
-                    pass_flag = 1
+                print('NS alert gone when temp crossed the TH as expected for the temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_0_data['pass_part_b'].append(1)  # pass part a , need to check what spec?
+                break
+        curr += 1
+    Asist_Func.temperature_change(maxTemperature)
 
-def get_to_low_temperature_limit_direction_0(self, diode, minTemperature, threshold, pass_flag):
-    while minTemperature < Asist_Func.read_temperature_code(self, diode):
-        input('Decrease the temperature by step of one and press any key to continue')
-        currTemp = Asist_Func.read_temperature_code(self, diode)
-        print('the current temperature for the diode ' + str(diode) + ' is:')
+
+def get_to_low_temperature_limit_direction_0(self, minTemperature, maxTemperature,threshold):
+    Asist_Func.temperature_change(maxTemperature)
+    curr = 0
+    while minTemperature < Asist_Func.read_temperature_code(self, 0):
+        print('decreasing the temperature by 1 degree')
+        Asist_Func.temperature_change(maxTemperature - curr)
+        currTemp = Asist_Func.read_temperature_code(self, 0)
+        print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
         if Asist_Func.dtd_ns_alert(self):
+            self.DTD_NS_alert_direction_0_data['temperature_alert_generated'].append(currTemp)
+            self.DTD_NS_alert_direction_0_data['diff_part_a'].append(currTemp - threshold)  # can be also negativ
             if currTemp > threshold:
-                self.diodesList[diode].PassNsAlertTest = 0
                 print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_0_data['pass_part_a'].append(0)  # no pass part a
+                break
             else:
-                print('NS alert rised as expected for the temperature: ' + str(currTemp))
-                if not pass_flag:
-                    self.diodesList[diode].PassNsAlertTest += 1
-                    pass_flag = 1
+                print('NS alerted when temp crossed the threshhold as expected for the temperature: ' + str(currTemp))
+                self.DTD_NS_alert_direction_0_data['pass_part_a'].append(1)  # pass part a , need to check what spec?
+                break
+        curr += 1
+    Asist_Func.temperature_change(minTemperature)  # preparing for part b of the test
 
 
 ## DTD non sticky alert test ## test 16
-def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction):
+def DTD_NS_ALERT_TEST_before_update(self, maxTemperature, minTemperature, threshold, direction):
     Asist_Func.all_dts_disable()
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     for diode in range(self.NumOfDiode):
@@ -686,73 +779,165 @@ def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction
             else:
                 print('diode not valid')
 
-def get_to_high_and_low_sticky_temperature_limit(self, diode, maxTemperature, minTemperature, highThreshold,lowThreshold):
-    pass_flag = 0
-    while maxTemperature > Asist_Func.read_temperature_code(self, diode):
-        input('Increase the temperature by step of one and press any key to continue')
-        currTemp = Asist_Func.read_temperature_code(self, diode)
-        print('the current temperature for the diode ' + str(diode) + ' is:')
+
+## DTD non sticky alert test ## test 16
+def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction):
+    Asist_Func.all_dts_disable()
+    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+    Asist_Func.update_diode_mask(self, 0)
+    Asist_Func.reinsert_calculated_existed_slope_offset(self, 0)
+    Asist_Func.dts_enable(self)
+    Asist_Func.dtd_ns_alert_threshold_direction_insert(self, threshold, direction)
+    self.DTD_NS_alert_direction_1_data['thresh_hold'].append(threshold)
+    self.DTD_NS_alert_direction_0_data['thresh_hold'].append(threshold)
+    if direction:
+        if Asist_Func.valid_diode_check(self, 0):  # the diode num can be modified
+            get_to_high_temperature_limit_direction_1(self, minTemperature,maxTemperature, threshold)
+            if not Asist_Func.dtd_ns_alert(self):
+                print('There is no alert after crossing the threshold temperature')
+                print('Therefore, part b of this test can not be done ')
+                self.DTD_NS_alert_direction_1_data['temperature_alert_generated'].append('not valid')
+                self.DTD_NS_alert_direction_1_data['diff_part_a'].append('not valid')
+                self.DTD_NS_alert_direction_1_data['pass_part_a'].append(0)
+                self.DTD_NS_alert_direction_1_data['temperature_alert_gone'].append('not valid')
+                self.DTD_NS_alert_direction_1_data['diff_part_b'].append('not valid')
+                self.DTD_NS_alert_direction_1_data['pass_part_b'].append('not valid')
+
+            else:  # part b of the test is lower the temeerature to the min value and check if alert is gone
+                get_to_low_temperature_limit_direction_1(self, minTemperature, maxTemperature, threshold)
+                if Asist_Func.dtd_ns_alert(self):
+                    print('There is alert after crossing back the threshold temperature')
+                    self.DTD_NS_alert_direction_1_data['temperature_alert_gone'].append('not valid')
+                    self.DTD_NS_alert_direction_1_data['diff_part_b'].append('not valid')
+                    self.DTD_NS_alert_direction_1_data['pass_part_b'].append(0)
+
+        else:
+            print('diode not valid')
+
+    else:  # direction is 0, now we will check the the other direction, triggered when below threshold
+        if Asist_Func.valid_diode_check(self, 0):
+            get_to_low_temperature_limit_direction_0(self, maxTemperature, minTemperature, threshold)
+            if not Asist_Func.dtd_ns_alert(self):
+                print('There is no alert after crossing the threshold temperature')
+                print('Increase the temperature to the max temperature value')
+                self.DTD_NS_alert_direction_0_data['temperature_alert_generated'].append('not valid')
+                self.DTD_NS_alert_direction_0_data['diff_part_a'].append('not valid')
+                self.DTD_NS_alert_direction_0_data['pass_part_a'].append(0)
+                self.DTD_NS_alert_direction_0_data['temperature_alert_gone'].append('not valid')
+                self.DTD_NS_alert_direction_0_data['diff_part_b'].append('not valid')
+                self.DTD_NS_alert_direction_0_data['pass_part_b'].append('not valid')
+
+            else:  # part 2 of the test is lower the temeerature to the min value and check if alert is gone
+                get_to_high_temperature_limit_direction_0(self, maxTemperature, minTemperature, threshold)
+                if Asist_Func.dtd_ns_alert(self):
+                    print('There is alert after crossing the threshold temperature')
+                    self.DTD_NS_alert_direction_0_data['temperature_alert_gone'].append('not valid')
+                    self.DTD_NS_alert_direction_0_data['diff_part_b'].append('not valid')
+                    self.DTD_NS_alert_direction_0_data['pass_part_b'].append(0)
+
+        else:
+            print('diode not valid')
+
+    print('direction = 1 :')
+    print(self.DTD_NS_alert_direction_1_data)
+    print('direction = 0 :')
+    print(self.DTD_NS_alert_direction_0_data)
+
+
+def get_to_high_and_low_sticky_temperature_limit(self, maxTemperature, minTemperature, highThreshold,lowThreshold):
+    curr = 0
+    alert_flag = 0
+    middle_temperature = (highThreshold - lowThreshold) / 2 + lowThreshold
+    Asist_Func.temperature_change(middle_temperature)
+    self.DTD_sticky_alert_data['thresh_hold_high'].append(highThreshold)
+    self.DTD_sticky_alert_data['thresh_hold_low'].append(lowThreshold)
+    while maxTemperature > Asist_Func.read_temperature_code(self, 0):
+        print('Increasing the temperature by step of one degree')
+        Asist_Func.temperature_change(middle_temperature + curr)
+        currTemp = Asist_Func.read_temperature_code(self, 0)
+        print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
         if Asist_Func.dtd_alert(self):
+            alert_flag = 1
+            self.DTD_sticky_alert_data['temperature_alert_generated_high'].append(currTemp)
+            self.DTD_sticky_alert_data['diff_part_a'].append(currTemp - highThreshold)
             if currTemp < highThreshold:
-                self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
                 print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
-                break
+                self.DTD_sticky_alert_data['pass_part_a'].append(0)  # no pass
             else:
-                print('Sticky alert rised as expected for the temperature: ' + str(currTemp))
-                if not pass_flag:
-                    self.diodesList[diode].PassStickyAlertTest += 1
-                    pass_flag = 1
+                print('Sticky alert alerted as expected for the temperature: ' + str(currTemp))
+                self.DTD_sticky_alert_data['pass_part_a'].append(1)
 
-    if not pass_flag and Asist_Func.read_temperature_code(self, diode) > highThreshold:  # The trigger didn't rise at all
-        self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
+        if alert_flag:  # sticky alert check before and after sticky clear
+            Asist_Func.temperature_change(middle_temperature)
+            if Asist_Func.dtd_alert(self):  # pass - if still high
+                Asist_Func.clear_sticky_alert(self)
+                if not Asist_Func.dtd_alert(self):  # pass - if the sticky alert cleared
+                    self.DTD_sticky_alert_data['sticky_alert_part_a'].append('pass')
+                    break
+
+            #  sticky alert fail
+            len_arr = len(self.DTD_sticky_alert_data['pass_part_a'])
+            self.DTD_sticky_alert_data['pass_part_a'][len_arr - 1] = 0
+            self.DTD_sticky_alert_data['sticky_alert_part_a'].append('no pass')
+            self.DTD_sticky_alert_data['temperature_alert_generated_low'].append('not valid')
+            self.DTD_sticky_alert_data['diff_part_b'].append('not valid')
+            self.DTD_sticky_alert_data['pass_part_b'].append('not valid')  # cant continue when cant clear alert
+            self.DTD_sticky_alert_data['sticky_alert_part_b'].append('not valid')
+            return
+        curr += 1
+
+    if not alert_flag:
         print('No sticky alert although the temperature is above the high limit')
+        self.DTD_sticky_alert_data['temperature_alert_generated_high'].append('not valid')
+        self.DTD_sticky_alert_data['diff_part_a'].append('not valid')
+        self.DTD_sticky_alert_data['pass_part_a'].append(0)
+        self.DTD_sticky_alert_data['sticky_alert_part_a'].append('not valid')
 
-    print('The sticky trigger is working for crossing high limit')
-    input('Get the temperature to between the limits and press any key')
-    currTemp = Asist_Func.read_temperature_code(self, diode)
-    print('the current temperature for the diode ' + str(diode) + ' is:')
-    print(currTemp)
-    if not Asist_Func.dtd_alert(self):
-        print('The sticky alert is 0 even though we did not clear it')
-        self.diodesList[diode].PassStickyAlertTest = 0
-
+    # Starting par b :
+    curr = 0
+    alert_flag = 0
+    print('Get the temperature between the limits')
+    Asist_Func.temperature_change(middle_temperature)
     Asist_Func.clear_sticky_alert(self)
-
-    # Check the low limit threshold of the sticky alert
-    pass_flag = 0
-    while minTemperature < Asist_Func.read_temperature_code(self, diode):
-        input('Decrease the temperature by step of one and press any key to continue')
-        currTemp = Asist_Func.read_temperature_code(self, diode)
-        print('the current temperature for the diode ' + str(diode) + ' is:')
+    while minTemperature < Asist_Func.read_temperature_code(self, 0):
+        print('Decreasing the temperature by one degree')
+        currTemp = Asist_Func.read_temperature_code(self, 0)
+        print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
         if Asist_Func.dtd_alert(self):
+            alert_flag = 1
+            self.DTD_sticky_alert_data['temperature_alert_generated_low'].append(currTemp)
+            self.DTD_sticky_alert_data['diff_part_b'].append(lowThreshold - currTemp)
             if currTemp > lowThreshold:
-                self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
                 print('There is an alert before we crossed the threshold temperature: ' + str(currTemp))
-                break
+                self.DTD_sticky_alert_data['pass_part_b'].append(0)  # no pass
             else:
-                print('Sticky alert triggered as expected for the temperature: ' + str(currTemp))
-                if not pass_flag:
-                    self.diodesList[diode].PassStickyAlertTest += 1
-                    pass_flag = 1
+                print('Sticky alert alerted as expected for the temperature: ' + str(currTemp))
+                self.DTD_sticky_alert_data['pass_part_b'].append(1)
 
-    if not pass_flag and Asist_Func.read_temperature_code(self, diode) < lowThreshold:  # The trigger didn't rise at all
-        self.diodesList[diode].PassStickyAlertTest = 0  # Test didn't pass for high limit
-        print('No sticky alert although the temperature is under the low limit')
+        # check sticky alert
+        if alert_flag:  # sticky alert check before and after sticky clear
+            Asist_Func.temperature_change(middle_temperature)
+            if Asist_Func.dtd_alert(self):  # pass - if still high
+                Asist_Func.clear_sticky_alert(self)
+                if not Asist_Func.dtd_alert(self):  # pass - if the sticky alert cleared
+                    self.DTD_sticky_alert_data['sticky_alert_part_b'].append('pass')
+                    break
 
-    print('The sticky trigger is working for crossing low limit')
-    input('Get the temperature to between the limits and press any key')
-    currTemp = Asist_Func.read_temperature_code(self, diode)
-    print('the current temperature for the diode ' + str(diode) + ' is:')
-    print(currTemp)
-    if not Asist_Func.dtd_alert(self):
-        print('The sticky alert is 0 even though we did not clear it')
-        self.diodesList[diode].PassStickyAlertTest = 0
+            #  sticky alert fail
+            len_arr = len(self.DTD_sticky_alert_data['pass_part_b'])
+            self.DTD_sticky_alert_data['pass_part_b'][len_arr - 1] = 0
+            self.DTD_sticky_alert_data['sticky_alert_part_b'].append('no pass')
+            return
+        curr += 1
 
-    if self.diodesList[diode].PassStickyAlertTest == 2:
-        print('The sticky alert works as expected!')
-
+    if not alert_flag:
+        print('No sticky alert although the temperature is above the high limit')
+        self.DTD_sticky_alert_data['temperature_alert_generated_low'].append('not valid')
+        self.DTD_sticky_alert_data['diff_part_b'].append('not valid')
+        self.DTD_sticky_alert_data['pass_part_b'].append(0)
+        self.DTD_sticky_alert_data['sticky_alert_part_b'].append('not valid')
 
 
 ## DTD sticky alert test ## test 17
@@ -760,20 +945,17 @@ def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLi
     print('Make sure the current temperature is between the limits ')
     Asist_Func.all_dts_disable()
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
-    for diode in range(self.NumOfDiode):
-        Asist_Func.update_diode_mask(self, diode)
-        Asist_Func.reinsert_calculated_existed_slope_offset(self, diode)
-        Asist_Func.dts_enable(self)
-        Asist_Func.dtd_sticky_thr_high(self, highLimit)
-        Asist_Func.dtd_sticky_thr_low(self, lowLimit)
-        if Asist_Func.valid_diode_check(self, diode):
-            pass_flag = 0
-            get_to_high_and_low_sticky_temperature_limit(self, diode, maxTemperature, minTemperature, highLimit,lowLimit)
-        else:
-            print('diode not valid')
+    Asist_Func.update_diode_mask(self, 0)
+    Asist_Func.reinsert_calculated_existed_slope_offset(self, 0)
+    Asist_Func.dts_enable(self)
+    Asist_Func.dtd_sticky_thr_high(self, highLimit)
+    Asist_Func.dtd_sticky_thr_low(self, lowLimit)
+    if Asist_Func.valid_diode_check(self, 0):
+        get_to_high_and_low_sticky_temperature_limit(self, maxTemperature, minTemperature, highLimit,lowLimit)
+    else:
+        print('diode not valid')
+    Asist_Func.dts_disable(self)
 
-        Asist_Func.dts_disable(self)
-    Asist_Func.all_dts_disable()
 
 ## bgcore bgg vtrim 700m ## test 19
 def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):

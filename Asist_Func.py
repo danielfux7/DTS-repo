@@ -24,14 +24,17 @@ ListAllDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_g
               'par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
               'par_sa_pma1_core1_dts0', 'atom_lpc']
 
-DTS_dict = {'dts0_aon': 0, 'dts1': 0, 'dts2': 0}
+DTS_dict = {'dts0_aon': 0, 'dts1': 0, 'dts2': 0, 'dts3': 0, 'dts_ccf0': 0, 'dts_ccf1': 0, 'dts_gt0': 0, 'dts_gt1': 0,
+              'par_sa_pma0_core0_dts0': 0, 'par_sa_pma0_core1_dts0': 0, 'par_sa_pma1_core0_dts0': 0,
+              'par_sa_pma1_core1_dts0': 0, 'atom_lpc': 0}
 
 OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
             '256_avgen', '512_avgen', '1024_avgen', '2048_avgen']
 FrequenciesDict = {25: 2, 50: 0, 100: 1}
 FrequenciesList = [25, 50, 100]
 temperatureList = [10, 30, 50, 70, 90]
-
+cattripTemperatureList = [80, 90, 95, 100, 105, 110, 115, 125]
+cattripTemperatureListGEn1 = [80, 100, 125]
 
 OSRmodesNum = 8
 VinADC = 0.77
@@ -349,7 +352,8 @@ def read_temperature_code(self, diode):
     else:
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtstemperature_' + str(diode)
     tempCode = eval(command)
-    return int(tempCode)
+    temperature_in_degrees = int(tempCode)/2 - 64
+    return temperature_in_degrees
 
 
 def diode_sel_ovr_en(self):
@@ -358,6 +362,7 @@ def diode_sel_ovr_en(self):
     else:
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.remote_diode_sel_ovr_en=1'
     exec(command)
+
 
 def diode_sel_ovr_val(self, diode):
     if self.name != 'atom_lpc':
@@ -506,6 +511,7 @@ def program_adc_clock_freq(self, freq):
     else:
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.dtsadcclkdiv=' + str(freq)
     exec(command)
+
 
 def dithering_enable(self):
     if self.name != 'atom_lpc':
@@ -709,6 +715,32 @@ def anadfxinen_select(self, selector):
     else:
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.anadfxinen=' + str(selector)
     exec(command)
+
+
+def aon_enable(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.dtsaonovrd=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.dtsaonovrdval=1'
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.dtsaonovrd=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.dtsaonovrdval=1'
+        exec(command)
+
+
+def aon_disable(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.dtsaonovrd=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.tapconfig.dtsaonovrdval=0'
+        exec(command)
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.dtsaonovrd=1'
+        exec(command)
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapconfig.dtsaonovrdval=0'
+        exec(command)
 
 
 def bgtrimtarget(self, bgtrimtarget):

@@ -51,6 +51,10 @@ class DTSGEN1(DTS):
     def DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en):
         _DTSGEN1.DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en)
 
+    ## DTS full accuracy function  ##
+    def DTS_full_accuracy_func_gen1(self, buf_en):
+        _DTSGEN1.DTS_full_accuracy_func_gen1(self,buf_en)
+
     # test 13
     def DTS_ADC_Linearity_check(self):
         _DTSGEN1.DTS_ADC_Linearity_check(self)
@@ -65,8 +69,11 @@ class DTSGEN1(DTS):
 
     # test 15
     def DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, temperature_start_point,target_temperature):
-        pass
-        #_DTSGEN1.DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, temperature_start_point, target_temperature)
+        _DTSGEN1.DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, temperature_start_point, target_temperature)
+
+    ## DTS full cattrip calib function gen1 ##
+    def DTS_full_cattrip_calib_func_gen1(self):
+        _DTSGEN1.DTS_full_cattrip_calib_func_gen1(self)
 
     # test 16
     def CATBLK_VREF_VBE_VCOMP_CHECK(self):

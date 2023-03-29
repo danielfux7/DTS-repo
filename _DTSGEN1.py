@@ -224,6 +224,19 @@ def DTS_CAT_TRIM_GEN1(self, cattrip_temperature):
 def DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, temperature_start_point, target_temperature):
     _DTS.DTS_postcalib_catblk_trim_check(self, temperature_start_point, target_temperature)
 
+## DTS full cattrip calib function gen1 ##
+def DTS_full_cattrip_calib_func_gen1(self):
+    for temperature in temperatureList:
+        Asist_Func.temperature_change(temperature)
+        DTS_CAT_AUTOTRIM_CHECK(self, temperature)
+    Asist_Func.temperature_change(25)
+    for cattrip_temperature in cattripTemperatureListGEn1:
+        start_point_temperature = cattrip_temperature - 10
+        Asist_Func.temperature_change(start_point_temperature)
+        DTS_CAT_TRIM_GEN1(self, cattrip_temperature)
+        DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, start_point_temperature, cattrip_temperature)
+    Asist_Func.temperature_change(25)
+
 
 def CATBLK_VREF_VBE_VCOMP_CHECK(self):
     Asist_Func.dts_disable(self)
