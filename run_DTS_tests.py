@@ -8,8 +8,8 @@ import pickle
 if __name__ == '__main__':
     print('Write in the list the DTSs you want to run, the default is all of them-13')
     dts_list = ListAllDTS  # can be modified
-    dts_list = ['dts1', 'atom_lpc']  #### for debug
-    num_of_tests = 20
+    dts_list = ['dts1']  #### for debug
+    num_of_tests = 22
     function_status = num_of_tests * [0]
     buf_en_arr = [0, 1]
     bg_wait_time_arr = [0, 0x1ff]  # 0z1ff = 5.12 us
@@ -21,9 +21,10 @@ if __name__ == '__main__':
                     '\n 3 - pre and post trim \n 4 - cattrip calibration \n 5 - sleep delay check(also dynamic) \n '
                     '6 - BG wait time check \n 7 - ADC clock divider test \n 8 - AON override DTS func check \n '
                     '9 - DTD NS alert test \n 10 - DTD sticky alert test \n 11 - power up output glitch check \n '
-                    '12 - pre and post trim BGREF check \n 13 - ANA power up sequence view \n 14 - dithering \n '
+                    '12 - pre trim BGREF check \n 13 - ANA power up sequence view \n 14 - dithering \n '
                     '15 - RD VBE check \n 16 - CATBLK VREF VBE VCOMP check \n 17 - ADC linearity check \n '
-                    '18 - AZ DC shift functionality check \n 19 - fusa check \n 20 -  \n')
+                    '18 - AZ DC shift functionality check \n 19 - fusa check \n 20 - post trim BGREF check \n '
+                    '21 - default BGREF check \n')
         test_num = int(num)
         if -1 < test_num < 20:  # check the name is correct
             if function_status[test_num]:
@@ -164,21 +165,20 @@ if __name__ == '__main__':
                     #DTS_dict[dts].
 
 
-
-        ## pre and post trim BGREF check ##    ######## need to finish
+        ## pre trim BGREF check ##    ######## need to finish the data saving
         if test_num == 12:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
-                    DTS_dict[dts].
+                    DTS_dict[dts].DTS_PRETRIM_BGREF_CHECK()
 
 
-        ## ANA power up sequence view ##       ######## need to finish
+        ## ANA power up sequence view ##
         if test_num == 13:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
-                    DTS_dict[dts].
+                    DTS_dict[dts].ANA_PWR_SEQ_VIEW()
 
 
         ## dithering ##     ######## need to finish
@@ -186,23 +186,21 @@ if __name__ == '__main__':
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
-                    DTS_dict[dts].
+                    DTS_dict[dts].dithering()
 
 
         ## RD VBE check ##    ######## need to finish
         if test_num == 15:
-            print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
-                    DTS_dict[dts].
+                    DTS_dict[dts].DTS_RD_VBE_Check()
 
 
         ## CATBLK VREF VBE VCOMP check ##    ######## need to finish
         if test_num == 16:
-            print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
-                    DTS_dict[dts].
+                    DTS_dict[dts].CATBLK_VREF_VBE_VCOMP_CHECK()
 
 
         ## ADC linearity check ##    ######## need to finish for gen 1!
@@ -229,6 +227,17 @@ if __name__ == '__main__':
                     DTS_dict[dts].bgr_fusa_check()
 
 
-        ##  ##   ######## need to finish
+        ## post trim BGREF check ##
         if test_num == 20:
-            pass
+            print('This test only for gen2')
+            for dts in dts_list:
+                if DTS_dict[dts].gen == 2:
+                    DTS_dict[dts].DTS_POSTTRIM_BGREF_CHECK()
+
+
+        ## default trim BGREF check ##
+        if test_num == 21:
+            print('This test only for gen2')
+            for dts in dts_list:
+                if DTS_dict[dts].gen == 2:
+                    DTS_dict[dts].DTS_DEFAULT_BGREF_CHECK()

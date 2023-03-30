@@ -16,6 +16,7 @@ class DTS:
     NumOfDiode = -1
     diodesList = []
     adc_linearity_check = []  # [voltage applied , raw code ]
+    adc_dynamic_check = []  # [freq, elapsed_time, curr_voltage_applied, raw code]
     adc_slope = 0
     adc_offset = 0
     gen = 2
@@ -26,6 +27,7 @@ class DTS:
     DTD_NS_alert_direction_0_data ={}
     DTD_NS_alert_direction_1_data = {}
     DTD_sticky_alert_data = {}
+    ana_pwr_seq_data = {}
     CATBLK_VREF_VBE_VCOMP_data = {}
     fusa_check = {}
     path = r'C:\Users\daniel\results'
@@ -171,9 +173,17 @@ class DTS:
     def BGCORE_VBG_vtrim(self, bgtrimcode, tc):
         _DTS.BGCORE_VBG_vtrim(self, bgtrimcode, tc)
 
+    ## DTS pre trim bg ref check ## test 19
+    def DTS_DEFAULT_BGREF_CHECK(self):
+        _DTS.DTS_DEFAULT_BGREF_CHECK(self)
+
     ## DTS pre trim bg ref check ## test 20
     def DTS_PRETRIM_BGREF_CHECK(self):
         _DTS.DTS_PRETRIM_BGREF_CHECK(self)
+
+    ## Dithering ## test 25
+    def dithering(self):
+        _DTS.dithering(self)
 
     ## VBE check ##
     def DTS_RD_VBE_Check(self):

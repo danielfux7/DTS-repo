@@ -63,7 +63,9 @@ def __init__(self, name):
                                    'time_expected_dynamic': [], 'time_measured_dynamic': [], 'diff_dyn_time': []}
     self.bg_wait_time_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': []}
     self.ADCclkDivData = {25: [], 50: [], 100: []}
-    self.CATBLK_VREF_VBE_VCOMP_data = {'diode': [], 'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
+    self.ana_pwr_seq_data = {'power_gate_enable': [], 'BGR_enable': [], 'LDO1p2V_enabled': [], 'ADC_sup_buf_enable': [],
+                             'ADC_sup_buf_enable_delayed': []}
+    self.CATBLK_VREF_VBE_VCOMP_data = {'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
                                        'vref_min': [], 'vref_max': []}
     self.fusa_check = {'step_1': -1, 'step_2': -1, 'step_3': -1}
     for i in range(DiodeNum[name]):
@@ -538,11 +540,17 @@ def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
     Asist_Func.oneshot_disable(self)
     Asist_Func.program_bg_wait(self,waitDelay)
     Asist_Func.program_digital_viewpin_o_digital_1(self, 0xb)
-    Asist_Func.dts_enable(self)
     print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1]')
     print('PASS - The duration b/w the falling an rising edge shall be equal to (waitDelay+1)*10ns')
+    while True:
+        Asist_Func.dts_enable(self)
+        print('measure with the scope')
+        repeat = input('press y for repeat the measurement, press n to continue the test')
+        if repeat == 'n':
+            break
+        Asist_Func.dts_disable(self)
     num = input('Enter the time you measured through the scope \n')
-    time_measured = int(num)
+    time_measured = float(num)
     time_expected = (waitDelay + 1) * 10e-9
     diff_time = abs(time_expected - time_measured)
     self.bg_wait_time_data['DTS_name'].append(self.name)
@@ -563,11 +571,17 @@ def SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic):  # sleepTimeDynamic !=
     Asist_Func.update_chosen_mask(self, 0)
     Asist_Func.program_sleep_timer(self, sleepTime)
     Asist_Func.program_digital_viewpin_o_digital_1(self, 0xc)
-    Asist_Func.dts_enable(self)
     print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1] on scope')
     print('PASS - The duration b/w the falling an rising edge shall be equal to (sleepTime*2^12+1000)*10ns')
+    while True:
+        Asist_Func.dts_enable(self)
+        print('measure with the scope')
+        repeat = input('press y for repeat the measurement, press n to continue the test')
+        if repeat == 'n':
+            break
+        Asist_Func.dts_disable(self)
     num = input('Enter the time you measured through the scope \n')
-    time_measured = int(num)
+    time_measured = float(num)
     time_expected = (sleepTime * pow(2, 12) + 1000) * 10e-9
     diff_time = abs(time_expected - time_measured)
     self.sleep_delay_check_data['DTS_name'].append(self.name)
@@ -576,9 +590,15 @@ def SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic):  # sleepTimeDynamic !=
     self.sleep_delay_check_data['diff_time'].append(diff_time)
     if sleepTimeDynamic:
         Asist_Func.program_sleep_timer(self, sleepTimeDynamic)
-        Asist_Func.enable_dynamic_update(self)
+        while True:
+            Asist_Func.enable_dynamic_update(self)
+            print('measure with the scope')
+            repeat = input('press y for repeat the measurement, press n to continue the test')
+            if repeat == 'n':
+                break
+            Asist_Func.disable_dynamic_update(self)
         num = input('Enter the time you measured through the scope for dynamic enable \n')
-        time_measured_dynamic = int(num)
+        time_measured_dynamic = float(num)
         time_expected_dynamic = (sleepTimeDynamic * pow(2, 12) + 1000) * 10e-9
         diff_dyn_time = abs(time_expected_dynamic - time_measured_dynamic)
         self.sleep_delay_check_data['time_expected_dynamic'].append(time_expected_dynamic)
@@ -957,7 +977,7 @@ def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLi
     Asist_Func.dts_disable(self)
 
 
-## bgcore bgg vtrim 700m ## test 19
+## bgcore bgg vtrim 700m ## for test 19, 20
 def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):
     Asist_Func.all_dts_disable()
     Asist_Func.set_any_bg_trim_code(self, bgtrimcode)
@@ -980,8 +1000,12 @@ def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):
         Asist_Func.dts_enable(self)
         print('Measure the vbe_dummy voltage through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and press any key')
         Asist_Func.measure_analog_func(self, 1)
-
     Asist_Func.dts_disable(self)
+
+
+## DTS pre trim bg ref check ## test 19
+def DTS_DEFAULT_BGREF_CHECK(self):
+    BGCORE_VBG_vtrim(self, int('0b10000', 2), 3)
 
 
 ## DTS pre trim bg ref check ## test 20
@@ -998,14 +1022,26 @@ def DTS_POSTTRIM_BGREF_CHECK(self):
 
 
 ## ana pwr seq view ##
-def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
+def ANA_PWR_SEQ_VIEW(self):  # test 24
     Asist_Func.all_dts_disable()
     Asist_Func.program_digital_viewpin_o_digital_0(self, 0xe)
-    Asist_Func.program_digital_viewpin_o_digital_1(self, viewpin1Signal)
-    print('Measure the time b/w falling edge viewpin0 and each of the signal on Viewpin1 '
-          'by running multiple iterations of this test.')
-    Asist_Func.measure_digital_func(self, 0)
-    Asist_Func.measure_digital_func(self, 1)
+    for digital_signal in anaPwrSeqSignalList:
+        Asist_Func.dts_disable(self)
+        Asist_Func.program_digital_viewpin_o_digital_1(self, anaPwrSeqSignalDict[digital_signal])
+        Asist_Func.dts_enable(self)
+        print('Measure the time b/w falling edge viewpin0 and each of the signal on Viewpin1 '
+              'by running multiple iterations of this test.')
+        print('use scope and get out the 2 digital signal and trigger the falling of DTS enable')
+        while True:
+            input('press any key to disable the DTS')
+            Asist_Func.dts_disable(self)
+            num = input('insert the time between the dts disable to the falling of the measured signal')
+            time_passed = float(num)
+            self.ana_pwr_seq_data[digital_signal].append(time_passed)
+            Asist_Func.dts_enable(self)
+            repeat = input('press y to repeat the measurement or n to go to the next signal')
+            if repeat == 'n':
+                break
 
 
 def default_setup_configuration(self):  # as the default values
@@ -1175,32 +1211,30 @@ def CATBLK_VREF_VBE_VCOMP_CHECK(self):
     codes = [0, 127]
     Asist_Func.dts_disable(self)
     for cattrip_code in codes:
-        for diode in range(self.NumOfDiode):
-            self.CATBLK_VREF_VBE_VCOMP_data['diode'].append(diode)
-            self.CATBLK_VREF_VBE_VCOMP_data['cattrip_code'].append(cattrip_code)
-            Asist_Func.insert_cattrip_code(self, cattrip_code, diode)
-            Asist_Func.diode_sel_ovr_en(self)
-            Asist_Func.diode_sel_ovr_val(self, diode)
-            #  measure comp vref
-            Asist_Func.program_viewanasigsel(self, int('0b11010100', 2))
-            Asist_Func.dts_enable(self)
-            self.CATBLK_VREF_VBE_VCOMP_data['comp_vref'].append(Asist_Func.measure_analog_func(self, 4))
-            Asist_Func.dts_disable(self)
-            #  measure comp vbe
-            Asist_Func.program_viewanasigsel(self, int('0b11010011', 2))
-            Asist_Func.dts_enable(self)
-            self.CATBLK_VREF_VBE_VCOMP_data['comp_vbe'].append(Asist_Func.measure_analog_func(self, 3))
-            Asist_Func.dts_disable(self)
-            #  measure vref min
-            Asist_Func.program_viewanasigsel(self, int('0b11010001', 2))
-            Asist_Func.dts_enable(self)
-            self.CATBLK_VREF_VBE_VCOMP_data['vref_min'].append(Asist_Func.measure_analog_func(self, 1))
-            Asist_Func.dts_disable(self)
-            #  measure vref max
-            Asist_Func.program_viewanasigsel(self, int('0b11010010', 2))
-            Asist_Func.dts_enable(self)
-            self.CATBLK_VREF_VBE_VCOMP_data['vref_max'].append(Asist_Func.measure_analog_func(self, 2))
-            Asist_Func.dts_disable(self)
+        self.CATBLK_VREF_VBE_VCOMP_data['cattrip_code'].append(cattrip_code)
+        Asist_Func.insert_cattrip_code(self, cattrip_code, 0)
+        Asist_Func.diode_sel_ovr_en(self)
+        Asist_Func.diode_sel_ovr_val(self, 0)
+        #  measure comp vref
+        Asist_Func.program_viewanasigsel(self, int('0b11010100', 2))
+        Asist_Func.dts_enable(self)
+        self.CATBLK_VREF_VBE_VCOMP_data['comp_vref'].append(Asist_Func.measure_analog_func(self, 4))
+        Asist_Func.dts_disable(self)
+        #  measure comp vbe
+        Asist_Func.program_viewanasigsel(self, int('0b11010011', 2))
+        Asist_Func.dts_enable(self)
+        self.CATBLK_VREF_VBE_VCOMP_data['comp_vbe'].append(Asist_Func.measure_analog_func(self, 3))
+        Asist_Func.dts_disable(self)
+        #  measure vref min
+        Asist_Func.program_viewanasigsel(self, int('0b11010001', 2))
+        Asist_Func.dts_enable(self)
+        self.CATBLK_VREF_VBE_VCOMP_data['vref_min'].append(Asist_Func.measure_analog_func(self, 1))
+        Asist_Func.dts_disable(self)
+        #  measure vref max
+        Asist_Func.program_viewanasigsel(self, int('0b11010010', 2))
+        Asist_Func.dts_enable(self)
+        self.CATBLK_VREF_VBE_VCOMP_data['vref_max'].append(Asist_Func.measure_analog_func(self, 2))
+        Asist_Func.dts_disable(self)
     print(self.CATBLK_VREF_VBE_VCOMP_data)
 
 
@@ -1235,6 +1269,36 @@ def DTS_SD_ADC_Linearity_check(self, voltage_step_size):
 
     ##### maybe export graph?
 
+## ADC Linearity check ##
+def DTS_SD_ADC_dynamic_check(self, a):
+    frequency_list = [1e3, 10e3, 48e3]
+    Asist_Func.dts_disable(self)
+    Asist_Func.adcdfxextvref_select(self, 0)
+    Asist_Func.adc_vref_select(self, 3)
+    Asist_Func.adc_vref_buf_select(self, 0)
+    Asist_Func.adcvinsel0_select(self, 3)
+    Asist_Func.anadfxinen_select(self, 2)
+
+    print('Apply external voltage reference to Ivref_a ')
+    print('Apply external input voltage  to external pin i_ana_dfx_1')
+    print('measure the vin with the data logger')
+
+    Asist_Func.oneshot_disable(self)
+    Asist_Func.update_diode_mask(self, 0)
+    Asist_Func.dts_enable(self)
+
+    for freq in frequency_list:
+        start_time =time.time()
+        elapsed_time = 0
+        target_time = 0.001  # target time in seconds, i.e., 1 millisecond
+        while elapsed_time < target_time:
+            elapsed_time = time.time() - start_time
+            curr_voltage_applied = Asist_Func.measure_analog_func(self, -1)
+            rawcode = Asist_Func.read_temperature_code(self, 0)
+            data = [freq, elapsed_time, curr_voltage_applied, rawcode]
+            self.adc_dynamic_check.append(data)
+            time.sleep(0.00001)
+
 
 ## DTS full accuracy function  ##
 def DTS_full_accuracy_func(self, bgwait):
@@ -1249,10 +1313,16 @@ def DTS_full_accuracy_func(self, bgwait):
     Asist_Func.temperature_change(25)
 
 
+## Dithering ##
+def dithering(self):
+    Asist_Func.dithering_enable(self)
+    DTS_full_accuracy_func(self, 0)
+
+
 ## AZ DC shift functionality check ##
 def AZ_DC_shift_func_check(self):
     Asist_Func.adc_az_offset_en(self)
-    DTS_full_accuracy_func(self)
+    DTS_full_accuracy_func(self, 0
 
 
 

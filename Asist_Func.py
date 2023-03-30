@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from config import *
 import pickle
+import time
 
 try:
     _sv = _namednodes.sv.get_manager(["socket"])
@@ -16,7 +17,7 @@ except:
         "WARNING: Your PythonSV doesn't seem to have the cpu component loaded. Some scripts may fail due to this.")
 
 # Constants #
-Mega =  1000000
+Mega = 1000000
 ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
 listGEN1DTS=['par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
              'par_sa_pma1_core1_dts0', 'atom_lpc']
@@ -35,6 +36,10 @@ FrequenciesList = [25, 50, 100]
 temperatureList = [10, 30, 50, 70, 90]
 cattripTemperatureList = [80, 90, 95, 100, 105, 110, 115, 125]
 cattripTemperatureListGEn1 = [80, 100, 125]
+anaPwrSeqSignalList = ['power_gate_enable', 'BGR_enable', 'LDO1p2V_enabled', 'ADC_sup_buf_enable',
+                       'ADC_sup_buf_enable_delayed']
+anaPwrSeqSignalDict = {'power_gate_enable': 8, 'BGR_enable': 0, 'LDO1p2V_enabled': 1, 'ADC_sup_buf_enable': 2,
+                       'ADC_sup_buf_enable_delayed': 15}
 
 OSRmodesNum = 8
 VinADC = 0.77
@@ -877,6 +882,11 @@ def measure_digital_func(self, digital_view_num):
 # In this function, you need to implement the voltage implementation method according to your device
 def apply_voltage_i_ana_dfx_1(voltage, frequency):
     print('The new voltage is ' + str(voltage))  # need to implement the Evatar
+    if frequency:
+        print('insert sin vin with amplitude of voltage/2 and the given frequency')
+    else:
+        print('apply DC voltage')
+
 
 
 # In this function, you need to implement the temperature implementation method according to your device
