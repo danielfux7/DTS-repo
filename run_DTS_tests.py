@@ -8,7 +8,7 @@ import pickle
 if __name__ == '__main__':
     print('Write in the list the DTSs you want to run, the default is all of them-13')
     dts_list = ListAllDTS  # can be modified
-    dts_list = ['dts1']  #### for debug
+    dts_list = ['dts1', 'par_sa_pma0_core0_dts0']  #### for debug
     num_of_tests = 22
     function_status = num_of_tests * [0]
     buf_en_arr = [0, 1]
@@ -194,6 +194,8 @@ if __name__ == '__main__':
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_RD_VBE_Check()
+                else:
+                    DTS_dict[dts].PWRON_DTS_RD_VBE_Check()
 
 
         ## CATBLK VREF VBE VCOMP check ##    ######## need to finish
@@ -209,6 +211,8 @@ if __name__ == '__main__':
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_SD_ADC_Linearity_check( voltage_step_size)
+                else:
+                    DTS_dict[dts].DTS_ADC_Linearity_check()
 
 
         ## AZ DC shift functionality check ##

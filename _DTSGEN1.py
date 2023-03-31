@@ -20,7 +20,8 @@ def __init__(self, name):
 
     # self.name = listGEN1DTS[dts_num]
     self.name = name
-    self.NumOfDiode = 6
+    self.NumOfDiode = 6,
+    self.VBE_check_data_gen1 = {}
     for i in range(6):
         self.diodesList.append(Diode(i))
 
@@ -33,15 +34,18 @@ def DTS_GEN1_TAP_DEFAULT_CHECK(self):
 
 
 def PWRON_DTS_RD_VBE_Check(self):
-    num_of_diodes = 2
-    Asist_Func.dts_disable(self)
-    for diode in range(num_of_diodes):
-        Asist_Func.diode_sel_ovr_en(self)
-        Asist_Func.diode_sel_ovr_val(self, diode)
-        Asist_Func.program_viewanasigsel(self, 6)  # Select the analog dft mux to out the RD VBE
-        Asist_Func.dts_enable(self)
-        Asist_Func.measure_analog_func(self, 6)  # Measure VBE2
-        Asist_Func.dts_disable(self)
+    _DTS.DTS_RD_VBE_Check(self)
+    # num_of_diodes = 2
+    # Asist_Func.dts_disable(self)
+    # Asist_Func.program_viewanasigsel(self, 6)  # Select the analog dft mux to out the RD VBE
+    #
+    #
+    # for diode in range(num_of_diodes):
+    #     Asist_Func.diode_sel_ovr_en(self)
+    #     Asist_Func.diode_sel_ovr_val(self, diode)
+    #     Asist_Func.dts_enable(self)
+    #     Asist_Func.measure_analog_func(self, 6)  # Measure VBE2
+    #     Asist_Func.dts_disable(self)
 
 
 def PWRON_BGCORE_VBE_VCCBGR_VBG(self):

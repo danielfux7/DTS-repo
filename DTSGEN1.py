@@ -13,6 +13,7 @@ class DTSGEN1(DTS):
     adc_slope = 0
     adc_offset = 0
     gen = 1
+    VBE_check_data_gen1 = {}
 
 
     # methods

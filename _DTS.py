@@ -339,6 +339,7 @@ def DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait):  # test 5
 ## Trim the diodea ##
 def DTS_trim_rawcode(self, bgWait):
     for diode in range(self.NumOfDiode):
+        #if Asist_Func.valid_diode_check(self, diode):
         if self.diodesList[diode].valid:
             if bgWait == 0:  #  trim after posttrim
                 temperatures = [item[0] for item in self.diodesList[diode].pretrimData]
@@ -353,6 +354,7 @@ def DTS_trim_rawcode(self, bgWait):
                     print('This bg wait time is not exist, you should do pre trim first')
                     return
 
+            rawcodes= [20,40,60,80,100]   ####################### for debug
             slope, offset = Asist_Func.calculate_slope_and_offset(rawcodes, temperatures)
             print('slope: ' + str(slope))
             print('offset: ' + str(offset))
@@ -1083,7 +1085,7 @@ def bgr_calib_step1_configuration(self):
     # apply external voltage
     Asist_Func.apply_voltage_i_ana_dfx_1(VinADC, 0)
     Asist_Func.adcvinsel0_select(self, 3)
-    Asist_Func.anadfxinen_select(3)
+    Asist_Func.anadfxinen_select(self, 3)
 
     # Select diode RD7 with ovrd and ovrd en
     Asist_Func.diode_sel_ovr_en(self)
@@ -1107,7 +1109,7 @@ def bgr_calib_step2_configuration(self):
     # apply external voltage
     Asist_Func.apply_voltage_i_ana_dfx_1(VinADC, 0)
     Asist_Func.adcvinsel0_select(self, 3)
-    Asist_Func.anadfxinen_select(3)
+    Asist_Func.anadfxinen_select(self, 3)
 
     # Select diode RD7 with ovrd and ovrd en
     Asist_Func.diode_sel_ovr_en(self)
@@ -1173,9 +1175,12 @@ def DTS_bg_trim_step2(self):
 def DTS_RD_VBE_Check(self):
     # configuration
     Asist_Func.all_dts_disable()
-    Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
-    Asist_Func.program_viewanasigsel(self, 0b11001001)  # VBE1
-    default_setup_configuration(self)
+    if self.gen == 2:
+        Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
+        Asist_Func.program_viewanasigsel(self, 0b11001001)  # VBE1
+        default_setup_configuration(self)
+    else:
+        Asist_Func.program_viewanasigsel(self, 6)  # Select the analog dft mux to out the RD VBE gen1
 
     # initialize
     diode_num = []
@@ -1200,10 +1205,14 @@ def DTS_RD_VBE_Check(self):
             error.append(gap)
 
     # Add data to the DTS class
-    self.VBE_check_data.update({'diode': diode_num, 'voltage_measured': voltage_measured, 'rawcode': rawcode,
-                                'rawcode_calculation': rawcode_calculation, 'error': error})
+    if self.gen == 2:
+        self.VBE_check_data.update({'diode': diode_num, 'voltage_measured': voltage_measured, 'rawcode': rawcode,
+                                    'rawcode_calculation': rawcode_calculation, 'error': error})
+        print(self.VBE_check_data)
+    else:
+        self.VBE_check_data_gen1.update({'diode': diode_num, 'voltage_measured': voltage_measured, 'rawcode': rawcode,
+                                    'rawcode_calculation': rawcode_calculation, 'error': error})
 
-    print(self.VBE_check_data)
 
 
 ## CATBLK_VREF_VBE_VCOMP_CHECK ##
@@ -1322,8 +1331,7 @@ def dithering(self):
 ## AZ DC shift functionality check ##
 def AZ_DC_shift_func_check(self):
     Asist_Func.adc_az_offset_en(self)
-    DTS_full_accuracy_func(self, 0
-
+    DTS_full_accuracy_func(self, 0)
 
 
 ## fusa_check ##
