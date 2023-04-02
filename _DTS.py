@@ -42,6 +42,10 @@ def __init__(self, name):
             print('1')
             continue
 
+        if name == 'dts_gen1_gen2':
+            self.name = name
+            return
+
         if name in ListDTS:  # check the name is correct
             print('2')
             break
@@ -1172,8 +1176,9 @@ def DTS_bg_trim_step2(self):
 
 
 ## VBE check ##
-def DTS_RD_VBE_Check(self):
+def DTS_RD_VBE_Check(self, temperature):
     # configuration
+    Asist_Func.temperature_change(temperature)
     Asist_Func.all_dts_disable()
     if self.gen == 2:
         Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
@@ -1203,6 +1208,8 @@ def DTS_RD_VBE_Check(self):
             rawcode_calculation.append(calculation)
             gap = rawcode[diode] - calculation
             error.append(gap)
+            if temperature == 100 and diode == 0:
+                self.vbe_diode0_100_deg = voltage_measured[diode]
 
     # Add data to the DTS class
     if self.gen == 2:

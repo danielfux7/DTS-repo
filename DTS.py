@@ -186,8 +186,8 @@ class DTS:
         _DTS.dithering(self)
 
     ## VBE check ##
-    def DTS_RD_VBE_Check(self):
-        _DTS.DTS_RD_VBE_Check(self)
+    def DTS_RD_VBE_Check(self, temperature):
+        _DTS.DTS_RD_VBE_Check(self, temperature)
 
     ## ana pwr seq view ##
     def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24

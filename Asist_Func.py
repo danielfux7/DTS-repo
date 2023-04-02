@@ -4,6 +4,7 @@ import numpy as np
 from config import *
 import pickle
 import time
+import os
 
 try:
     _sv = _namednodes.sv.get_manager(["socket"])
@@ -58,6 +59,11 @@ DiodeNum = {
     "dts_ccf1": 2,
     "dts_gt0": 6,
     "dts_gt1": 6,
+    "par_sa_pma0_core0_dts0": 6,
+    "par_sa_pma0_core1_dts0": 6,
+    "par_sa_pma1_core0_dts0": 6,
+    "par_sa_pma1_core1_dts0": 6,
+    "atom_lpc": 6
 }
 
 Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs', 'dtstapcfgfuse']
@@ -876,7 +882,8 @@ def measure_analog_func(self, analog_view_num):
 
 # In this function, you need to implement the measurement method according to your measurement device
 def measure_digital_func(self, digital_view_num):
-    input() # need to implement the Evatar
+    print('digital VP') # need to implement the Evatar
+    # do some logic that return 1 when high and 0 when low
 
 
 # In this function, you need to implement the voltage implementation method according to your device
@@ -892,3 +899,179 @@ def apply_voltage_i_ana_dfx_1(voltage, frequency):
 # In this function, you need to implement the temperature implementation method according to your device
 def temperature_change(temperature):
     print('The new temperatue is ' + str(temperature))
+
+
+def insert_calibrated_fuses_to_unit_from_file():
+    if os.path.isfile("bgrtrimcode.txt"):
+        with open("bgrtrimcode.txt", "r") as file:
+            # Read the file's contents into a variable
+            file_contents = file.read()
+            print(file_contents)
+        # Close the file
+        file.close()
+
+        # Execute the file's contents as Python code
+        exec(file_contents)
+    else:
+        return 1
+
+    if os.path.isfile("accuracy.txt"):
+        with open("accuracy.txt", "r") as file:
+            # Read the file's contents into a variable
+            file_contents = file.read()
+
+        # Close the file
+        file.close()
+
+        # Execute the file's contents as Python code
+        exec(file_contents)
+    else:
+        return 1
+
+    if os.path.isfile("cattripcode.txt"):
+        with open("cattripcode.txt", "r") as file:
+            # Read the file's contents into a variable
+            file_contents = file.read()
+
+        # Close the file
+        file.close()
+
+        # Execute the file's contents as Python code
+        exec(file_contents)
+    else:
+        return 1
+
+    return 0
+
+
+def export_all_fuses_from_unit_to_file(): ## fuses out file for other group!
+    if insert_calibrated_fuses_to_unit_from_file():
+        print('not all the fuses are calibrated')
+        return
+    with open("C:/Users/daniel/calibrated_fuses.txt", "w") as file:
+        for dts in ListAllDTS:
+            if dts != 'atom_lpc':
+                command = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.bgrtrimcode'
+            else:
+                command = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.bgrtrimcode'
+            bgrtrimcode = eval(command)
+
+            #  saving for text
+            if dts != 'atom_lpc':
+                line = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.bgrtrimcode = ' + str(bgrtrimcode)
+            else:
+                line = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.bgrtrimcode = ' + str(bgrtrimcode)
+
+            file.write(line + '\n')
+
+            for diode in range(DiodeNum[dts]):
+                if dts != 'atom_lpc':
+                    command_slope = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.slope_' + str(diode)
+                    command_offset = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.offset_' + str(diode)
+                    command_cattrip_code = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.cattripcode_' + str(diode)
+                else:
+                    command_slope = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.slope_' + str(diode)
+                    command_offset = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.offset_' + str(diode)
+                    command_cattrip_code = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.cattripcode_' + str(diode)
+
+                slope = eval(command_slope)
+                offset = eval(command_offset)
+                cattripcode = eval(command_cattrip_code)
+
+                if dts != 'atom_lpc':
+                    line1 = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.slope_' + str(diode) + ' = ' + str(slope)
+                    line2 = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.offset_' + str(diode) + ' = ' + str(offset)
+                    line3 = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.cattripcode_' + str(diode) + ' = ' + str(cattripcode)
+                else:
+                    line1 = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.slope_' + str(diode) + ' = ' + str(slope)
+                    line2 = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.offset_' + str(diode) + ' = ' + str(offset)
+                    line3 = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.cattripcode_' + str(diode) + ' = ' + str(cattripcode)
+
+                file.write(line1 + '\n')
+                file.write(line2 + '\n')
+                file.write(line3 + '\n')
+
+        # enable the cattrip and the dts
+        for dts in ListAllDTS:
+            if dts != 'atom_lpc':
+                line1 = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.cattripdisable = 0'
+                line2 = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenableovrd = 1'
+                line3 = 'cdie.taps.cdie_' + dts + '.dtsfusecfg.dtsenable = 1'
+            else:
+                line1 = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.cattripdisable = 0'
+                line2 = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.dtsenableovrd = 1'
+                line3 = 'cdie.taps.cdie_' + dts + '.dtstapcfgfuse.dtsenable = 1'
+
+            file.write(line1 + '\n')
+            file.write(line2 + '\n')
+            file.write(line3 + '\n')
+    file.close()
+
+
+def write_calibrated_bgtrim_code_to_file():
+    print('this function will save the calibrated bg trim code')
+    with open("bgrtrimcode.txt", "w") as file:
+        for dts in ListAllDTS:
+            if dts != 'atom_lpc':
+                command = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.bgrtrimcode'
+            else:
+                command = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.bgrtrimcode'
+            bgrtrimcode = eval(command)
+
+            #  saving for text
+            if dts != 'atom_lpc':
+                line = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.bgrtrimcode = ' + str(bgrtrimcode)
+            else:
+                line = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.bgrtrimcode = ' + str(bgrtrimcode)
+
+            file.write(line + '\n')
+    file.close()
+
+
+def write_slope_offset_to_file():
+    print('this function will save the trim values in file - slope and offset of each diode')
+    with open("accuracy.txt", "w") as file:
+        for dts in ListAllDTS:
+            for diode in range(DiodeNum[dts]):
+                if dts != 'atom_lpc':
+                    command_slope = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.slope_' + str(diode)
+                    command_offset = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.offset_' + str(diode)
+                else:
+                    command_slope = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.slope_' + str(diode)
+                    command_offset = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.offset_' + str(diode)
+
+                slope = eval(command_slope)
+                offset = eval(command_offset)
+
+                if dts != 'atom_lpc':
+                    line1 = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.slope_' + str(diode) + ' = ' + str(slope)
+                    line2 = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.offset_' + str(diode) + ' = ' + str(offset)
+                else:
+                    line1 = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.slope_' + str(diode) + ' = ' + str(slope)
+                    line2 = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.offset_' + str(diode) + ' = ' + str(offset)
+
+                file.write(line1 + '\n')
+                file.write(line2 + '\n')
+    file.close()
+
+
+def write_cattripcode_to_file():
+    print('this function will save cattrip code values in file of each diode')
+    with open("cattripcode.txt", "w") as file:
+        for dts in ListAllDTS:
+            for diode in range(DiodeNum[dts]):
+                if dts != 'atom_lpc':
+                    command_cattrip_code = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.cattripcode_' + str(diode)
+                else:
+                    command_cattrip_code = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.cattripcode_' + str(diode)
+                cattripcode = eval(command_cattrip_code)
+
+                if dts != 'atom_lpc':
+                    line3 = 'cpu.cdie.taps.cdie_' + dts + '.dtsfusecfg.cattripcode_' + str(diode) + ' = ' + str(cattripcode)
+                else:
+                    line3 = 'cpu.cdie.taps.cdie_' + dts + '.dtstapcfgfuse.cattripcode_' + str(diode) + ' = ' + str(cattripcode)
+                file.write(line3 + '\n')
+    file.close()
+
+
+

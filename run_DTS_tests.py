@@ -9,10 +9,12 @@ if __name__ == '__main__':
     print('Write in the list the DTSs you want to run, the default is all of them-13')
     dts_list = ListAllDTS  # can be modified
     dts_list = ['dts1', 'par_sa_pma0_core0_dts0']  #### for debug
-    num_of_tests = 22
+    num_of_tests = 24
     function_status = num_of_tests * [0]
     buf_en_arr = [0, 1]
     bg_wait_time_arr = [0, 0x1ff]  # 0z1ff = 5.12 us
+    Asist_Func.insert_calibrated_fuses_to_unit_from_file()
+    general_dts = DTS('dts_gen1_gen2')
 
     # Choose what tests to run
     while 1:
@@ -24,7 +26,7 @@ if __name__ == '__main__':
                     '12 - pre trim BGREF check \n 13 - ANA power up sequence view \n 14 - dithering \n '
                     '15 - RD VBE check \n 16 - CATBLK VREF VBE VCOMP check \n 17 - ADC linearity check \n '
                     '18 - AZ DC shift functionality check \n 19 - fusa check \n 20 - post trim BGREF check \n '
-                    '21 - default BGREF check \n')
+                    '21 - default BGREF check \n 22 - cattrip alert check ext vbe \n 23 - fuses file \n')
         test_num = int(num)
         if -1 < test_num < 20:  # check the name is correct
             if function_status[test_num]:
@@ -51,7 +53,7 @@ if __name__ == '__main__':
 
 
         ## Fuses check ##
-        if test_num == 1:
+        elif test_num == 1:
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_TAP_Default_Check()
@@ -61,18 +63,26 @@ if __name__ == '__main__':
 
 
         ## BGR calibration ##
-        if test_num == 2:
+        elif test_num == 2:
+            bgrtrimcode_dict = {'DTS': [], 'bgrtrimcode': []}
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 1:
+                    DTS_dict[dts].BGR_calib_gen1(63)
+                    bgrtrimcode_dict['DTS'].append(dts)
+                    bgrtrimcode_dict['bgrtrimcode'].append(DTS_dict[dts].bgrtrimcode)
                     continue
 
                 DTS_dict[dts].bg_trim_step1()
                 DTS_dict[dts].bg_trim_step2()
+                bgrtrimcode_dict['DTS'].append(dts)
+                bgrtrimcode_dict['bgrtrimcode'].append(DTS_dict[dts].Step2TrimValue)
+            Asist_Func.write_calibrated_bgtrim_code_to_file()
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'BGR_calibration', bgrtrimcode_dict)
 
 
         ## pre and post trim ##
-        if test_num == 3:
+        elif test_num == 3:
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     for bgwait in bg_wait_time_arr:
@@ -80,21 +90,23 @@ if __name__ == '__main__':
                 else:
                     for buf_en in buf_en_arr:
                         DTS_dict[dts].DTS_full_accuracy_func_gen1(buf_en)
+            Asist_Func.write_slope_offset_to_file()
 
 
         ## cattrip calibration ##
-        if test_num == 4:
+        elif test_num == 4:
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_full_cattrip_calib_func()
                 else:
                     for buf_en in buf_en_arr:
                         DTS_dict[dts].DTS_full_cattrip_calib_func_gen1()
+            Asist_Func.write_cattripcode_to_file()
 
 
         ## sleep delay check ##
-        print('This test only for gen2')
-        if test_num == 5:
+        elif test_num == 5:
+            print('This test only for gen2')
             sleep_time = 1  # TBD check what should be the time?
             sleepTimeDynamic = 2  # TBD check what should be the time?
             for dts in dts_list:
@@ -103,7 +115,7 @@ if __name__ == '__main__':
 
 
         ## BG wait time check ##
-        if test_num == 6:
+        elif test_num == 6:
             print('This test only for gen2')
             bg_wait = 500  # can be something that bigger than 300 and can be observed
             for dts in dts_list:
@@ -112,7 +124,7 @@ if __name__ == '__main__':
 
 
         ## ADC clock divider test ##
-        if test_num == 7:
+        elif test_num == 7:
             print('This test only for gen2')
             diode = 0  # can be modified
             for dts in dts_list:
@@ -123,7 +135,7 @@ if __name__ == '__main__':
 
 
         ## AON override DTS func check ##
-        if test_num == 8:
+        elif test_num == 8:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -131,7 +143,7 @@ if __name__ == '__main__':
 
 
         ## DTD NS alert test ##
-        if test_num == 9:
+        elif test_num == 9:
             print('This test only for gen2')
             maxTemperature = 50
             minTemperature = 40
@@ -145,7 +157,7 @@ if __name__ == '__main__':
 
 
         ## DTD sticky alert test ##
-        if test_num == 10:
+        elif test_num == 10:
             print('This test only for gen2')
             maxTemperature = 70
             minTemperature = 54
@@ -157,7 +169,7 @@ if __name__ == '__main__':
 
 
         ## power up output glitch check ##     ######## need discuss with Michael!
-        if test_num == 11:
+        elif test_num == 11:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -166,7 +178,7 @@ if __name__ == '__main__':
 
 
         ## pre trim BGREF check ##    ######## need to finish the data saving
-        if test_num == 12:
+        elif test_num == 12:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -174,7 +186,7 @@ if __name__ == '__main__':
 
 
         ## ANA power up sequence view ##
-        if test_num == 13:
+        elif test_num == 13:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -182,7 +194,7 @@ if __name__ == '__main__':
 
 
         ## dithering ##     ######## need to finish
-        if test_num == 14:
+        elif test_num == 14:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -190,7 +202,7 @@ if __name__ == '__main__':
 
 
         ## RD VBE check ##    ######## need to finish
-        if test_num == 15:
+        elif test_num == 15:
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_RD_VBE_Check()
@@ -199,14 +211,14 @@ if __name__ == '__main__':
 
 
         ## CATBLK VREF VBE VCOMP check ##    ######## need to finish
-        if test_num == 16:
+        elif test_num == 16:
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].CATBLK_VREF_VBE_VCOMP_CHECK()
 
 
         ## ADC linearity check ##    ######## need to finish for gen 1!
-        if test_num == 17:
+        elif test_num == 17:
             voltage_step_size = 0.09
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -216,7 +228,7 @@ if __name__ == '__main__':
 
 
         ## AZ DC shift functionality check ##
-        if test_num == 18:
+        elif test_num == 18:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -224,7 +236,7 @@ if __name__ == '__main__':
 
 
         ## fusa check ##
-        if test_num == 19:
+        elif test_num == 19:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -232,7 +244,7 @@ if __name__ == '__main__':
 
 
         ## post trim BGREF check ##
-        if test_num == 20:
+        elif test_num == 20:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -240,8 +252,20 @@ if __name__ == '__main__':
 
 
         ## default trim BGREF check ##
-        if test_num == 21:
+        elif test_num == 21:
             print('This test only for gen2')
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_DEFAULT_BGREF_CHECK()
+
+
+        ## cattrip alert check ext vbe ##
+        elif test_num == 22:
+            print('This test only for gen1')
+            for dts in dts_list:
+                if DTS_dict[dts].gen == 1:
+                    DTS_dict[dts].DTS_CATTRIP_ALERT_CHK_EXTVBE()
+
+        ## fuses file ##
+        elif test_num == 23:
+            Asist_Func.export_all_fuses_from_unit_to_file()

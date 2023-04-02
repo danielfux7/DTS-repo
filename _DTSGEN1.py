@@ -22,8 +22,14 @@ def __init__(self, name):
     self.name = name
     self.NumOfDiode = 6,
     self.VBE_check_data_gen1 = {}
+    self.PWRON_BGCORE_VBE_VCCBGR_VBG_data = {'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
+    self.CATBLK_VREF_VBE_VCOMP_CHECK_data = {'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [], 'come_vref': []}
+    self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {'alert_voltage', 'vbe_100_deg', 'voltage_gap'}
     for i in range(6):
         self.diodesList.append(Diode(i))
+
+def BGR_calib_gen1(self, bgrtrimcode):
+    Asist_Func.set_any_bg_trim_code(self, bgrtrimcode)
 
 
 ## catblk vref vbe vcomp check ## test 1
@@ -33,8 +39,8 @@ def DTS_GEN1_TAP_DEFAULT_CHECK(self):
     _DTS.DTS_TAP_Default_Check(self)
 
 
-def PWRON_DTS_RD_VBE_Check(self):
-    _DTS.DTS_RD_VBE_Check(self)
+def PWRON_DTS_RD_VBE_Check(self, temperature):
+    _DTS.DTS_RD_VBE_Check(sel, temperature)
     # num_of_diodes = 2
     # Asist_Func.dts_disable(self)
     # Asist_Func.program_viewanasigsel(self, 6)  # Select the analog dft mux to out the RD VBE
@@ -48,19 +54,22 @@ def PWRON_DTS_RD_VBE_Check(self):
     #     Asist_Func.dts_disable(self)
 
 
-def PWRON_BGCORE_VBE_VCCBGR_VBG(self):
+def PWRON_BGCORE_VBE_VCCBGR_VBG(self, bgtrimcode):
     Asist_Func.dts_disable(self)
-    Asist_Func.set_any_bg_trim_code(self, 50)  # set bgrtrimcode  = 6'b110010 (0x30) =32+16+2 =50 #### verify!!!
+    Asist_Func.set_any_bg_trim_code(self, bgtrimcode)  # set bgrtrimcode  = 6'b110010 (0x30) =32+16+2 =50 #### verify!!!
+    aelf.PWRON_BGCORE_VBE_VCCBGR_VBG_data['bgtrimcode'].append(bgtrimcode)
     Asist_Func.program_viewanasigsel(self, 1)  # Select the analog dft mux to out the BGCORE VBE
     Asist_Func.dts_enable(self)
-    Asist_Func.measure_analog_func(self, 1)  # Measure BGCORE VBE1
+    vbe1 = Asist_Func.measure_analog_func(self, 1)  # Measure BGCORE VBE1
+    self.PWRON_BGCORE_VBE_VCCBGR_VBG_data['BGCORE_VBE1'].append(vbe1)
     Asist_Func.dts_disable(self)
     Asist_Func.program_viewanasigsel(self, 2)  # Select the analog dft mux to out the BGCORE VCCBGR, BGREF(Vbg)
     Asist_Func.dts_enable(self)
-    Asist_Func.measure_analog_func(self, 2)  # Measure VCCBGR
+    bgr = Asist_Func.measure_analog_func(self, 2)  # Measure VCCBGR
+    self.PWRON_BGCORE_VBE_VCCBGR_VBG_data['VCCBGR'].append(bgr)
+    Asist_Func.dts_disable(self)
 
-
-def PWRON_CATBLK_VREF_VBE_VCOMP_CHECK(self):
+def PWRON_CATBLK_VREF_VBE_VCOMP_CHECK(self): ## no need to use!
     Asist_Func.dts_disable(self)
     cattrip_code = [0, 127]
     for code in cattrip_code:
@@ -246,19 +255,26 @@ def CATBLK_VREF_VBE_VCOMP_CHECK(self):
     Asist_Func.dts_disable(self)
     cattrip_code = [0, 127]
     for code in cattrip_code:
-        Asist_Func.insert_cattrip_code(self, code, 0)  # Set the cattrip trim code=6'b000000
+        Asist_Func.insert_cattrip_code(self, code, 0)  # Set the cattrip trim code=6'b000000 for diode 0(can modify it)
+        self.CATBLK_VREF_VBE_VCOMP_CHECK_data['cattrip_code'].append(code)
+
         Asist_Func.program_viewanasigsel(self, 4)  # Select the analog dft mux to out:cattrip comparator vref_min/_max
         Asist_Func.dts_enable(self)
-        Asist_Func.measure_analog_func(self, 4)  # Measure vrefmax
+        vrefmax = Asist_Func.measure_analog_func(self, 4)  # Measure vrefmax
+        self.CATBLK_VREF_VBE_VCOMP_CHECK_data['Vref_max'].append(vrefmax)
         Asist_Func.dts_disable(self)
+
         Asist_Func.program_viewanasigsel(self, 3)  # Select the analog dft mux to out the cattrip comparator output
         Asist_Func.dts_enable(self)
-        Asist_Func.measure_analog_func(self, 3)  # Measure cattrip comparator output
+        comp_out = Asist_Func.measure_analog_func(self, 3)  # Measure cattrip comparator output
+        self.CATBLK_VREF_VBE_VCOMP_CHECK_data['cattrip_comp'].append(comp_out)
         Asist_Func.dts_disable(self)
-    Asist_Func.program_viewanasigsel(self, 5)  # Select the analog dft mux to out the remote diode Vbe
-    Asist_Func.dts_enable(self)
-    Asist_Func.measure_analog_func(self, 5)  # Measure the comparator vref
-    Asist_Func.dts_disable(self)
+
+        Asist_Func.program_viewanasigsel(self, 5)  # Select the analog dft mux to out the comparator vref
+        Asist_Func.dts_enable(self)
+        come_vref = Asist_Func.measure_analog_func(self, 5)  # Measure the comparator vref
+        self.CATBLK_VREF_VBE_VCOMP_CHECK_data['come_vref'].append(come_vref)
+        Asist_Func.dts_disable(self)
 
 
 def DTS_CATTRIP_ALERT_CHK_EXTVBE(self):
@@ -267,7 +283,7 @@ def DTS_CATTRIP_ALERT_CHK_EXTVBE(self):
     voltages_applied = np.arange(0.4, 0.6+0.002, 0.002)
     Asist_Func.oneshot_disable(self)
     Asist_Func.update_diode_mask(self, 0)
-    cattrip_code = 0 ## TBD get the cattrip vref code for 100C
+    vbe1_100_deg = 0 ## TBD get the vbe voltage for 100C of diode 0
     Asist_Func.insert_cattrip_code(self, cattrip_code, 0)
     Asist_Func.anadfxinen_select(self, 2)
     Asist_Func.program_digital_viewpin_o_digital_1(self, 14)
@@ -275,7 +291,11 @@ def DTS_CATTRIP_ALERT_CHK_EXTVBE(self):
     for voltage in range(len(voltages_applied)):
         Asist_Func.apply_voltage_i_ana_dfx_1(voltage, 0)
         ## TBD if thermtrip alert is generated: break and voltage and compare with the vbe we get form the RD VBE check
-        break
+        if Asist_Func.measure_digital_func(self, 0xd):
+            self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['alert_voltage'].append(voltage)
+            self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['vbe_100_deg'].append(vbe1_100_deg)
+            self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['voltage_gap'].append(voltage-vbe1_100_deg)
+            break
 
 
 def DTS_AVG_SUPLKG_CHECK_ONESHOTMODE(self):

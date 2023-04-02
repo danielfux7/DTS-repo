@@ -12,25 +12,33 @@ class DTSGEN1(DTS):
     adc_linearity_check = []  # [voltage applied , raw code ]
     adc_slope = 0
     adc_offset = 0
+    bgrtrimcode = 63
     gen = 1
     VBE_check_data_gen1 = {}
+    PWRON_BGCORE_VBE_VCCBGR_VBG_data = {}
+    CATBLK_VREF_VBE_VCOMP_CHECK_data = {}
+    DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {}
+    vbe_diode0 = -1
 
 
     # methods
     def __init__(self, name):
         _DTSGEN1.__init__(self, name)
 
+    def BGR_calib_gen1(self, bgrtrimcode):
+        _DTSGEN1.BGR_calib_gen1(self, bgrtrimcode)
+
     # test 1
     def DTS_GEN1_TAP_DEFAULT_CHECK(self):
         _DTSGEN1.DTS_GEN1_TAP_DEFAULT_CHECK(self)
 
     # test 2
-    def PWRON_DTS_RD_VBE_Check(self):
-        _DTSGEN1.PWRON_DTS_RD_VBE_Check(self)
+    def PWRON_DTS_RD_VBE_Check(self, temperature):
+        _DTSGEN1.PWRON_DTS_RD_VBE_Check(self, temperature)
 
     # test 3
-    def PWRON_BGCORE_VBE_VCCBGR_VBG(self):
-        _DTSGEN1.PWRON_BGCORE_VBE_VCCBGR_VBG(self)
+    def PWRON_BGCORE_VBE_VCCBGR_VBG(self, bgtrimcode):
+        _DTSGEN1.PWRON_BGCORE_VBE_VCCBGR_VBG(self, bgtrimcode)
 
     # test 4
     def PWRON_CATBLK_VREF_VBE_VCOMP_CHECK(self):
