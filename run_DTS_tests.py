@@ -8,13 +8,13 @@ import pickle
 if __name__ == '__main__':
     print('Write in the list the DTSs you want to run, the default is all of them-13')
     dts_list = ListAllDTS  # can be modified
-    dts_list = ['dts1', 'par_sa_pma0_core0_dts0']  #### for debug
+    dts_list = ['dts1', 'dts2','par_sa_pma0_core0_dts0']  #### for debug
     num_of_tests = 24
     function_status = num_of_tests * [0]
     buf_en_arr = [0, 1]
-    bg_wait_time_arr = [0, 0x1ff]  # 0z1ff = 5.12 us
+    bg_wait_time_arr = [0]  # 0z1ff = 5.12 us
     Asist_Func.insert_calibrated_fuses_to_unit_from_file()
-    general_dts = DTS('dts_gen1_gen2')
+    general_dts = DTS('dts')
 
     # Choose what tests to run
     while 1:
@@ -50,9 +50,10 @@ if __name__ == '__main__':
                     DTS_dict[dts] = dts_gen1
                     gen = 1
                     #print(dts_gen1.name)
+            DTS_dict['dts1'].diodesList[0].slope = 100000
+            print('check')
 
-
-        ## Fuses check ##
+            ## Fuses check ##
         elif test_num == 1:
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
@@ -85,12 +86,12 @@ if __name__ == '__main__':
         elif test_num == 3:
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
-                    for bgwait in bg_wait_time_arr:
-                        DTS_dict[dts].DTS_full_accuracy_func(bgwait)
+                    DTS_dict[dts].DTS_full_accuracy_func()
                 else:
                     for buf_en in buf_en_arr:
                         DTS_dict[dts].DTS_full_accuracy_func_gen1(buf_en)
             Asist_Func.write_slope_offset_to_file()
+            Asist_Func.export_full_accuracy_data(general_dts, dts_list)
 
 
         ## cattrip calibration ##
@@ -116,11 +117,15 @@ if __name__ == '__main__':
 
         ## BG wait time check ##
         elif test_num == 6:
+            bg_wait_dict = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': []}
             print('This test only for gen2')
             bg_wait = 500  # can be something that bigger than 300 and can be observed
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].BG_WAIT_TIME_CHECK(bg_wait)
+                    bg_wait_dict = Asist_Func.merge_2_dictionaries_with_same_titles(bg_wait_dict,
+                                                                                    DTS_dict[dts].bg_wait_time_data)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'BG_wait_check', bg_wait_dict)
 
 
         ## ADC clock divider test ##

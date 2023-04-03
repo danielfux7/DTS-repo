@@ -9,7 +9,7 @@ from Diode import *
 
 class DTS:
     # Variables
-    name = "dts"
+    name = "dtsgen2"
     temperature = 25 # default
     Step1TrimValue = -1
     Step2TrimValue = -1
@@ -20,6 +20,9 @@ class DTS:
     adc_slope = 0
     adc_offset = 0
     gen = 2
+    pre_trim_all_diodes_data = {}
+    slope_offset_all_diodes_data = {}
+    post_trim_all_diodes_data = {}
     VBE_check_data = {}
     sleep_delay_check_data = {}
     bg_wait_time_data = {}
@@ -91,22 +94,22 @@ class DTS:
 
     ## Pre Trim Rawcode Readout ##
     # Description:
-    def pretrim_rawcode_readout(self, temp, bgWait):  # test 5
-        _DTS.DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait)
+    def pretrim_rawcode_readout(self, temp):  # test 5
+        _DTS.DTS_pretrim_rawcode_readout_particular_temp(self, temp)
 
     ## Trim the diodea ##
     ## Description:
-    def DTS_trim_rawcode(self, bgWait):
-        _DTS.DTS_trim_rawcode(self, bgWait)
+    def DTS_trim_rawcode(self):
+        _DTS.DTS_trim_rawcode(self)
 
     ## Post Trim Temp Readout ##
     # Description:
-    def posttrim_temp_readout(self, temperature, bgWait):  # test 6
-        _DTS.DTS_posttrim_temp_readout(self, temperature, bgWait)
+    def posttrim_temp_readout(self, temperature):  # test 6
+        _DTS.DTS_posttrim_temp_readout(self, temperature)
 
     ## DTS full accuracy function  ##
-    def DTS_full_accuracy_func(self, bgwait):
-        _DTS.DTS_full_accuracy_func(self, bgwait)
+    def DTS_full_accuracy_func(self):
+        _DTS.DTS_full_accuracy_func(self)
 
     ## cat autotrim check ##
     # Description:

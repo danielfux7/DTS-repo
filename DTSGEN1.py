@@ -14,6 +14,9 @@ class DTSGEN1(DTS):
     adc_offset = 0
     bgrtrimcode = 63
     gen = 1
+    pre_trim_all_diodes_data = {}
+    slope_offset_all_diodes_data = {}
+    post_trim_all_diodes_data = {}
     VBE_check_data_gen1 = {}
     PWRON_BGCORE_VBE_VCCBGR_VBG_data = {}
     CATBLK_VREF_VBE_VCOMP_CHECK_data = {}

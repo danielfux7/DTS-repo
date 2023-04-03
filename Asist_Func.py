@@ -66,6 +66,9 @@ DiodeNum = {
     "atom_lpc": 6
 }
 
+OSRmodes_dict = {0: '256_avgdis', 1: '512_avgdis', 2: '1024_avgdis', 3: '2048_avgdis', 4: '256_avgen',
+                 5: '512_avgen', 6: '1024_avgen', 7: '2048_avgen'}
+
 Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs', 'dtstapcfgfuse']
 
 
@@ -86,6 +89,68 @@ def convert_array_to_dict(arr, title_names):
         new_dict[title_names[i]] = curr_list
     print(new_dict)
     return new_dict
+
+
+def merge_2_dictionaries_with_same_titles(dict1, dict2):
+    merged_dict = dict(dict1)
+    for key, value in dict2.items():
+        if key in merged_dict:
+            merged_dict[key] += value
+        else:
+            merged_dict[key] = value
+
+    print(merged_dict)
+    return merged_dict
+
+
+def export_full_accuracy_data(self, dts_list):
+    final_pre_trim_dict_for_excel_gen2 = {}
+    final_slope_offset_for_excel_gen2 = {}
+    final_post_trim_dict_for_excel_gen2 = {}
+    final_pre_trim_dict_for_excel_gen1 = {}
+    final_slope_offset_for_excel_gen1 = {}
+    final_post_trim_dict_for_excel_gen1 = {}
+    flag_gen2 = 1
+    flag_gen1 = 1
+    for dts in dts_list:
+        if DTS_dict[dts].gen == 2:
+            if flag_gen2:
+                final_pre_trim_dict_for_excel_gen2 = DTS_dict[dts].pre_trim_all_diodes_data
+                final_slope_offset_for_excel_gen2 = DTS_dict[dts].slope_offset_all_diodes_data
+                final_post_trim_dict_for_excel_gen2 = DTS_dict[dts].post_trim_all_diodes_data
+                flag_gen2 = 0
+                continue
+            final_pre_trim_dict_for_excel_gen2 = merge_2_dictionaries_with_same_titles(
+                final_pre_trim_dict_for_excel_gen2, DTS_dict[dts].pre_trim_all_diodes_data)
+            final_slope_offset_for_excel_gen2 = merge_2_dictionaries_with_same_titles(
+                final_slope_offset_for_excel_gen2, DTS_dict[dts].slope_offset_all_diodes_data)
+            final_post_trim_dict_for_excel_gen2 = merge_2_dictionaries_with_same_titles(
+                final_post_trim_dict_for_excel_gen2, DTS_dict[dts].post_trim_all_diodes_data)
+
+        else:
+            if flag_gen1:
+                final_pre_trim_dict_for_excel_gen1 = DTS_dict[dts].pre_trim_all_diodes_data
+                final_slope_offset_for_excel_gen1 = DTS_dict[dts].slope_offset_all_diodes_data
+                final_post_trim_dict_for_excel_gen1 = DTS_dict[dts].post_trim_all_diodes_data
+                flag_gen1 = 0
+                continue
+            final_pre_trim_dict_for_excel_gen1 = merge_2_dictionaries_with_same_titles(
+                final_pre_trim_dict_for_excel_gen1,DTS_dict[dts].pre_trim_all_diodes_data)
+            final_slope_offset_for_excel_gen1 = merge_2_dictionaries_with_same_titles(
+                final_slope_offset_for_excel_gen1, DTS_dict[dts].slope_offset_all_diodes_data)
+            final_post_trim_dict_for_excel_gen1 = merge_2_dictionaries_with_same_titles(
+                final_post_trim_dict_for_excel_gen1, DTS_dict[dts].post_trim_all_diodes_data)
+
+    self.pre_trim_all_diodes_data = final_pre_trim_dict_for_excel_gen2
+    self.slope_offset_all_diodes_data = final_slope_offset_for_excel_gen2
+    self.post_trim_all_diodes_data = final_post_trim_dict_for_excel_gen2
+    create_excel_file_for_chosen_func(self, 'pre_trim_full_data_gen2', final_pre_trim_dict_for_excel_gen2)
+    create_excel_file_for_chosen_func(self, 'slope_offset_data_gen2', final_slope_offset_for_excel_gen2)
+    create_excel_file_for_chosen_func(self, 'post_trim_full_data_gen2', final_post_trim_dict_for_excel_gen2)
+    create_excel_file_for_chosen_func(self, 'pre_trim_full_data_gen1', final_pre_trim_dict_for_excel_gen1)
+    create_excel_file_for_chosen_func(self, 'slope_offset_data_gen1', final_slope_offset_for_excel_gen1)
+    create_excel_file_for_chosen_func(self, 'post_trim_full_data_gen1', final_post_trim_dict_for_excel_gen1)
+
 
 def create_excel_file_for_chosen_func(self, func_name, dict_for_excel):
     path = create_new_path_for_func(self.path, func_name, self.name)

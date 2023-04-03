@@ -20,13 +20,19 @@ def __init__(self, name):
 
     # self.name = listGEN1DTS[dts_num]
     self.name = name
-    self.NumOfDiode = 6,
+    self.NumOfDiode = 6
+    self.pre_trim_all_diodes_data = {'dts': [], 'buf_en': [], 'diode': [], 'temperature': [], 'raw_code': []}
+    self.slope_offset_all_diodes_data = {'dts': [], 'buf_en': [], 'diode': [], 'slope': [], 'offset': []}
+    self.post_trim_all_diodes_data = {'dts': [], 'buf_en': [], 'diode': [], 'temperature': [],
+                                      'measured_temperature': [], 'error': []}
     self.VBE_check_data_gen1 = {}
     self.PWRON_BGCORE_VBE_VCCBGR_VBG_data = {'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
     self.CATBLK_VREF_VBE_VCOMP_CHECK_data = {'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [], 'come_vref': []}
     self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {'alert_voltage', 'vbe_100_deg', 'voltage_gap'}
-    for i in range(6):
-        self.diodesList.append(Diode(i))
+    # for i in range(6):
+    #     self.diodesList.append(Diode(i))
+    self.diodesList = [Diode(i) for i in range(6)]
+
 
 def BGR_calib_gen1(self, bgrtrimcode):
     Asist_Func.set_any_bg_trim_code(self, bgrtrimcode)
@@ -124,6 +130,14 @@ def DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en):
             else:
                 self.diodesList[diode].pretrim_gen1_buf_dis.append(data)
                 print(self.diodesList[diode].pretrim_gen1_buf_dis)
+
+            # collect data to excel
+            self.pre_trim_all_diodes_data['dts'].append(self.name)
+            self.pre_trim_all_diodes_data['buf_en'].append(buf_en)
+            self.pre_trim_all_diodes_data['diode'].append(diode)
+            self.pre_trim_all_diodes_data['temperature'].append(temperature)
+            self.pre_trim_all_diodes_data['raw_code'].append(rawcode)
+
         else:
             print(str(diode) + ' is invalid')
 
@@ -142,6 +156,13 @@ def DTS_trim_gen1(self, buf_en):
             print('slope: ' + str(slope))
             print('offset: ' + str(offset))
             Asist_Func.insert_slope_offset_to_diode(self, diode, slope, offset)
+
+            # collect data for the excel
+            self.slope_offset_all_diodes_data['dts'].append(self.name)
+            self.slope_offset_all_diodes_data['buf_en'].append(buf_en)
+            self.slope_offset_all_diodes_data['diode'].append(diode)
+            self.slope_offset_all_diodes_data['slope'].append(slope)
+            self.slope_offset_all_diodes_data['offset'].append(offset)
 
 
 def DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en):
@@ -167,6 +188,15 @@ def DTS_POSTTRIM_TEMP_READOUT(self, temperature, buf_en):
             else:
                 self.diodesList[diode].posttrim_gen1_buf_dis.append(data)
                 print(self.diodesList[diode].posttrim_gen1_buf_dis)
+
+            # save the data for the excel
+            self.post_trim_all_diodes_data['dts'].append(self.name)
+            self.post_trim_all_diodes_data['buf_en'].append(buf_en)
+            self.post_trim_all_diodes_data['diode'].append(diode)
+            self.post_trim_all_diodes_data['temperature'].append(temperature)
+            self.post_trim_all_diodes_data['measured_temperature'].append(temperature_measured)
+            self.post_trim_all_diodes_data['error'].append(error)
+
         else:
             print(str(diode) + ' is invalid')
 

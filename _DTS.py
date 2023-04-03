@@ -42,7 +42,7 @@ def __init__(self, name):
             print('1')
             continue
 
-        if name == 'dts_gen1_gen2':
+        if name == 'dts':
             self.name = name
             return
 
@@ -53,6 +53,12 @@ def __init__(self, name):
     self.name = name
     self.NumOfDiode = DiodeNum[name]
     self.VBE_check_data = {}
+    self.pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [], 'mean_raw_code': [],
+                                      'min_raw_code': [], 'max_raw_code': []}
+    self.slope_offset_all_diodes_data = {'dts': [], 'diode': [], 'slope': [], 'offset': []}
+    self.post_trim_all_diodes_data = {'dts': [], 'OSR_mode': [], 'diode': [], 'temperature': [],
+                                      'measured_temperature': [], 'error': []}
+
     self.DTD_NS_alert_direction_0_data = {'thresh_hold': [], 'temperature_alert_generated': [], 'diff_part_a': [],
                                           'pass_part_a': [], 'temperature_alert_gone': [], 'diff_part_b': [],
                                           'pass_part_b': []}
@@ -72,8 +78,9 @@ def __init__(self, name):
     self.CATBLK_VREF_VBE_VCOMP_data = {'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
                                        'vref_min': [], 'vref_max': []}
     self.fusa_check = {'step_1': -1, 'step_2': -1, 'step_3': -1}
-    for i in range(DiodeNum[name]):
-        self.diodesList.append(Diode(i))
+    # for i in range(DiodeNum[name]):
+    #     self.diodesList.append(Diode(i))
+    self.diodesList = [Diode(i) for i in range(DiodeNum[name])]
 
 
 def method(self):
@@ -285,13 +292,14 @@ def taps_against_cri(self):
 
 
 ## Pre Trim Rawcode Readout ##
-def DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait):  # test 5
+def DTS_pretrim_rawcode_readout_particular_temp(self, temp):  # test 5
     #  initialize arrays
     minCodeArr = [0xffff] * self.NumOfDiode
     maxCodeArr = [0] * self.NumOfDiode
     validcodecheck = [True] * self.NumOfDiode
     sumCodeArr = [0] * self.NumOfDiode
     meanCodeArr = [0] * self.NumOfDiode
+    pre_trim_titles = ['dts', 'diode', 'temperature', 'mean raw code', 'min raw code', 'max raw code']
 
     print('Starting pre trim rawcode readout : ' + str(self.name))
     Asist_Func.all_dts_disable()
@@ -300,8 +308,6 @@ def DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait):  # test 5
         for diode in range(int(self.NumOfDiode)):
             Asist_Func.update_diode_mask(self, int(diode))  # Update diode mask
             Asist_Func.oneshot_disable(self)  # Disable oneshot mode
-            if bgWait:  # check if need to configure delay for bg
-                Asist_Func.program_bg_wait(self, bgWait)
             Asist_Func.dts_enable(self)  # enable DTS via registers
 
             #if Asist_Func.valid_diode_check(self, diode):  # check if diode exist and valid
@@ -312,7 +318,6 @@ def DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait):  # test 5
                     minCodeArr[diode] = rawCode
                 if maxCodeArr[diode] < rawCode:
                     maxCodeArr[diode] = rawCode
-
             else:
                 validcodecheck[diode] = False
             Asist_Func.dts_disable(self)  # disable DTS via registers
@@ -320,53 +325,38 @@ def DTS_pretrim_rawcode_readout_particular_temp(self, temp, bgWait):  # test 5
 
     # Do the avg calc and Store the date in the right diode:
     for diode in range(self.NumOfDiode):
-        # if validcodecheck[i]:
+        # if Asist_Func.valid_diode_check(self, diode):
         if True:  ########## for debug:
             meanCodeArr[diode] = sumCodeArr[diode] / MeasurementsNum
-            diodeData = [temp,  meanCodeArr[diode], minCodeArr[diode], maxCodeArr[diode]]
-            if bgWait == 0:
-                self.diodesList[diode].pretrimData.append(diodeData)
-            else:
-                diodeData.append(bgWait)  # this data is from the bg wait code check
-                if bgWait in self.diodesList[diode].bgWaitData:
-                    self.diodesList[diode].bgWaitData[bgWait].append(diodeData)
-                else:
-                    self.diodesList[diode].bgWaitData.update({bgWait: [diodeData]})
+            diodeData = [self.name, diode, temp,  meanCodeArr[diode], minCodeArr[diode], maxCodeArr[diode]]
+            self.diodesList[diode].pretrimData.append(diodeData)
         else:
             meanCodeArr[i] = 'invalid diode'
             self.diodesList[i].valid = False
-
-
     print('finish pre trim temp / bgwait code check')
 
 
 ## Trim the diodea ##
-def DTS_trim_rawcode(self, bgWait):
+def DTS_trim_rawcode(self):
     for diode in range(self.NumOfDiode):
         #if Asist_Func.valid_diode_check(self, diode):
         if self.diodesList[diode].valid:
-            if bgWait == 0:  #  trim after posttrim
-                temperatures = [item[0] for item in self.diodesList[diode].pretrimData]
-                rawcodes = [item[1] for item in self.diodesList[diode].pretrimData]
+            temperatures = [item[2] for item in self.diodesList[diode].pretrimData]
+            rawcodes = [item[3] for item in self.diodesList[diode].pretrimData]
 
-            else:
-                if bgWait in self.diodesList[diode].bgWaitData:
-                    temperatures = [item[0] for item in self.diodesList[diode].bgWaitData[bgWait]]
-                    rawcodes = [item[1] for item in self.diodesList[diode].bgWaitData[bgWait]]
-
-                else:
-                    print('This bg wait time is not exist, you should do pre trim first')
-                    return
-
-            rawcodes= [20,40,60,80,100]   ####################### for debug
+            rawcodes = [20, 40, 60, 80, 100]   ####################### for debug
             slope, offset = Asist_Func.calculate_slope_and_offset(rawcodes, temperatures)
             print('slope: ' + str(slope))
             print('offset: ' + str(offset))
             Asist_Func.insert_slope_offset_to_diode(self, diode, slope, offset)
+            self.slope_offset_all_diodes_data['dts'].append(self.name)
+            self.slope_offset_all_diodes_data['diode'].append(diode)
+            self.slope_offset_all_diodes_data['slope'].append(slope)
+            self.slope_offset_all_diodes_data['offset'].append(offset)
 
 
 ## Post Trim Temp Readout ##
-def DTS_posttrim_temp_readout(self, temperature, bgWait):  # test 6
+def DTS_posttrim_temp_readout(self, temperature):  # test 6
     Asist_Func.all_dts_disable()  # First disable all the DTS
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     Asist_Func.update_chosen_mask(self, 0xffff)  # update the mask to select all the calibrated dioides
@@ -378,26 +368,25 @@ def DTS_posttrim_temp_readout(self, temperature, bgWait):  # test 6
         curr = []
         for diode in range(self.NumOfDiode):
             #if Asist_Func.valid_diode_check(self, diode):
+            if True: ####################### for debug
                 rawcode = Asist_Func.read_temperature_code(self, diode)
                 measTemperature = self.diodesList[diode].slope * rawcode_read(self) + self.diodesList[diode].offset
                 tempError = temperature - measTemperature
-                curr = [temperature, measTemperature, tempError]
-                if bgWait == 0:
-                    self.diodesList[diode].posttrimData[OSRmodes[i]].append(curr)
-                else:
-                    if bgWait in self.diodesList[diode].bgWaitData:
-                        if bgWait in self.diodesList[diode].bgWaitPost:
-                            self.diodesList[diode].bgWaitPost[bgWait].Data[OSRmodes[i]].append(curr)
-                        else:
-                            self.diodesList[diode].bgWaitPost.update({bgWait: BgwaitPostTrim(bgWait)})
-                            self.diodesList[diode].bgWaitPost[bgWait].Data[OSRmodes[i]].append(curr)
-                    else:
-                        print('This bg wait time is not exist, you sshould do pre trim first')
-                        return
+                curr = [self.name, OSRmodes_dict[avgen * 4 + mode], diode,temperature, measTemperature, tempError]
+                self.diodesList[diode].posttrimData[OSRmodes[i]].append(curr)
+
+                # collect data for excel
+                self.post_trim_all_diodes_data['dts'].append(self.name)
+                self.post_trim_all_diodes_data['OSR_mode'].append(OSRmodes_dict[avgen * 4 + mode])
+                self.post_trim_all_diodes_data['diode'].append(diode)
+                self.post_trim_all_diodes_data['temperature'].append(temperature)
+                self.post_trim_all_diodes_data['measured_temperature'].append(measTemperature)
+                self.post_trim_all_diodes_data['error'].append(tempError)
 
         Asist_Func.dts_disable(self)
     Asist_Func.all_dts_disable()
     print('finish one iteration of post trim readout ')
+
 
 ## Cat auto trim Check ##
 def DTS_cat_autotrim_check(self, temperature):  # test 7
@@ -551,7 +540,7 @@ def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
     while True:
         Asist_Func.dts_enable(self)
         print('measure with the scope')
-        repeat = input('press y for repeat the measurement, press n to continue the test')
+        repeat = input('press y for repeat the measurement, press n to continue the test \n')
         if repeat == 'n':
             break
         Asist_Func.dts_disable(self)
@@ -1317,15 +1306,22 @@ def DTS_SD_ADC_dynamic_check(self, a):
 
 
 ## DTS full accuracy function  ##
-def DTS_full_accuracy_func(self, bgwait):
+def DTS_full_accuracy_func(self):
     for temperature in temperatureList:
         Asist_Func.temperature_change(temperature)
-        DTS_pretrim_rawcode_readout_particular_temp(self, temperature, bgwait)
+        DTS_pretrim_rawcode_readout_particular_temp(self, temperature)
+
+    # save the data of pre trim
+    pre_trim_titles = ['dts', 'diode', 'temperature', 'mean_raw_code', 'min_raw_code', 'max_raw_code']
+    for diode in range(self.NumOfDiode):
+        pre_trim_dict_for_diode = Asist_Func.convert_array_to_dict(self.diodesList[diode].pretrimData, pre_trim_titles)
+        self.pre_trim_all_diodes_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.pre_trim_all_diodes_data,
+                                                                                         pre_trim_dict_for_diode)
     Asist_Func.temperature_change(25)
-    DTS_trim_rawcode(self, bgwait)
+    DTS_trim_rawcode(self)
     for temperature in temperatureList:
         Asist_Func.temperature_change(temperature)
-        DTS_posttrim_temp_readout(self, temperature, bgwait)
+        DTS_posttrim_temp_readout(self, temperature)
     Asist_Func.temperature_change(25)
 
 

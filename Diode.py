@@ -47,3 +47,4 @@ class Diode:
         self.pretrim_gen1_buf_dis = []
         self.posttrim_gen1_buf_en = []
         self.posttrim_gen1_buf_dis = []
+        self.slope = -1
