@@ -17,6 +17,9 @@ class DTSGEN1(DTS):
     pre_trim_all_diodes_data = {}
     slope_offset_all_diodes_data = {}
     post_trim_all_diodes_data = {}
+    cat_pre_trim_all_diodes_data = {}
+    cat_trim_all_diodes_data = {}
+    catblk_post_calib_data = {}
     VBE_check_data_gen1 = {}
     PWRON_BGCORE_VBE_VCCBGR_VBG_data = {}
     CATBLK_VREF_VBE_VCOMP_CHECK_data = {}

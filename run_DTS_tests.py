@@ -8,7 +8,7 @@ import pickle
 if __name__ == '__main__':
     print('Write in the list the DTSs you want to run, the default is all of them-13')
     dts_list = ListAllDTS  # can be modified
-    dts_list = ['dts1', 'dts2','par_sa_pma0_core0_dts0']  #### for debug
+    dts_list = ['dts1', 'dts2', 'par_sa_pma0_core0_dts0']  #### for debug
     num_of_tests = 24
     function_status = num_of_tests * [0]
     buf_en_arr = [0, 1]
@@ -100,19 +100,31 @@ if __name__ == '__main__':
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_full_cattrip_calib_func()
                 else:
-                    for buf_en in buf_en_arr:
-                        DTS_dict[dts].DTS_full_cattrip_calib_func_gen1()
+                    DTS_dict[dts].DTS_full_cattrip_calib_func_gen1()
             Asist_Func.write_cattripcode_to_file()
+            Asist_Func.export_full_cattrip_data(general_dts, dts_list)
 
 
         ## sleep delay check ##
         elif test_num == 5:
             print('This test only for gen2')
+            sleep_delay_dict = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': [],
+                                'time_expected_dynamic': [], 'time_measured_dynamic': [], 'diff_dyn_time': []}
             sleep_time = 1  # TBD check what should be the time?
-            sleepTimeDynamic = 2  # TBD check what should be the time?
+            num = input('For sleep delay check press - 0 \n'
+                        'For dynamic delay check insert the time \n')
+            sleepTimeDynamic = int(num)
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].SLEEP_DELAY_CHECK(sleep_time, sleepTimeDynamic)
+                    sleep_delay_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                        sleep_delay_dict, DTS_dict[dts].sleep_delay_check_data)
+            if sleepTimeDynamic:
+                test_name = 'dynamic_sleep_delay_check'
+            else:
+                test_name = 'sleep_delay_check'
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, test_name, sleep_delay_dict)
+            general_dts.sleep_delay_check_data = sleep_delay_dict
 
 
         ## BG wait time check ##
@@ -126,17 +138,24 @@ if __name__ == '__main__':
                     bg_wait_dict = Asist_Func.merge_2_dictionaries_with_same_titles(bg_wait_dict,
                                                                                     DTS_dict[dts].bg_wait_time_data)
             Asist_Func.create_excel_file_for_chosen_func(general_dts, 'BG_wait_check', bg_wait_dict)
+            general_dts.bg_wait_time_data = bg_wait_dict
 
 
         ## ADC clock divider test ##
         elif test_num == 7:
+            adc_clk_div_dict = {'DTS_name': [], 'frequency': [], 'temperature': [],
+                                'measured_temperature': [], 'error': []}
             print('This test only for gen2')
             diode = 0  # can be modified
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     for temperature in temperatureList:
                         Asist_Func.temperature_change(temperature)
-                        DTS_dict[dts].ADC_CLK_DIV_TEST(temperature, diode)
+                        DTS_dict[dts].ADC_CLK_DIV_TEST(temperature, 0)
+                        adc_clk_div_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                            adc_clk_div_dict,DTS_dict[dts].adc_clk_all_data)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'ADC_clock_divider', adc_clk_div_dict)
+            general_dts.adc_clk_all_data = adc_clk_div_dict
 
 
         ## AON override DTS func check ##

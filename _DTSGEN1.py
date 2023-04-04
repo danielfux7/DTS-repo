@@ -25,6 +25,13 @@ def __init__(self, name):
     self.slope_offset_all_diodes_data = {'dts': [], 'buf_en': [], 'diode': [], 'slope': [], 'offset': []}
     self.post_trim_all_diodes_data = {'dts': [], 'buf_en': [], 'diode': [], 'temperature': [],
                                       'measured_temperature': [], 'error': []}
+
+    # cattrip data
+    self.cat_pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [], 'cattrip_code': [], 'error': []}
+    self.cat_trim_all_diodes_data = {'dts': [], 'diode': [], 'cat_slope': [], 'cat_offset': [], 'cattrip_code': []}
+    self.catblk_post_calib_data = {'dts': [], 'diode': [], 'temperature': [], 'cattrip_temperature': [],
+                                   'cat_alert': [], 'status': []}
+
     self.VBE_check_data_gen1 = {}
     self.PWRON_BGCORE_VBE_VCCBGR_VBG_data = {'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
     self.CATBLK_VREF_VBE_VCOMP_CHECK_data = {'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [], 'come_vref': []}
@@ -260,6 +267,14 @@ def DTS_CAT_AUTOTRIM_CHECK(self, temperature):
         self.diodesList[diode].catAutoTrimData.append(data)
         Asist_Func.dts_disable(self)
 
+        # save data for excel
+        self.cat_pre_trim_all_diodes_data['dts'].append(self.name)
+        self.cat_pre_trim_all_diodes_data['diode'].append(diode)
+        self.cat_pre_trim_all_diodes_data['temperature'].append(temperature)
+        self.cat_pre_trim_all_diodes_data['cattrip_code'].append(code)
+        self.cat_pre_trim_all_diodes_data['error'].append(error)
+
+
 def DTS_CAT_TRIM_GEN1(self, cattrip_temperature):
     _DTS.DTS_cat_trim_rawcode(self, cattrip_temperature)
 
@@ -273,10 +288,10 @@ def DTS_full_cattrip_calib_func_gen1(self):
         Asist_Func.temperature_change(temperature)
         DTS_CAT_AUTOTRIM_CHECK(self, temperature)
     Asist_Func.temperature_change(25)
+    DTS_CAT_TRIM_GEN1(self, 20)  ####### need to modify the tem to 80
     for cattrip_temperature in cattripTemperatureListGEn1:
         start_point_temperature = cattrip_temperature - 10
         Asist_Func.temperature_change(start_point_temperature)
-        DTS_CAT_TRIM_GEN1(self, cattrip_temperature)
         DTS_POSTCALIB_CATBLK_TRIP_CHECK(self, start_point_temperature, cattrip_temperature)
     Asist_Func.temperature_change(25)
 

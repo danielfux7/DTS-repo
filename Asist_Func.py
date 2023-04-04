@@ -35,8 +35,9 @@ OSRmodes = ['256_avgdis', '512_avgdis', '1024_avgdis', '2048_avgdis',
 FrequenciesDict = {25: 2, 50: 0, 100: 1}
 FrequenciesList = [25, 50, 100]
 temperatureList = [10, 30, 50, 70, 90]
-cattripTemperatureList = [80, 90, 95, 100, 105, 110, 115, 125]
-cattripTemperatureListGEn1 = [80, 100, 125]
+cattripTemperatureList = [80, 90, 95, 100, 105, 110, 115]  ############### add 125 because debug!
+cattripTemperatureListGEn1 = [80, 100]  ############### add 125 because debug!
+cattripTemperatureListGEn1 = [20, 30]  ######################## debug
 anaPwrSeqSignalList = ['power_gate_enable', 'BGR_enable', 'LDO1p2V_enabled', 'ADC_sup_buf_enable',
                        'ADC_sup_buf_enable_delayed']
 anaPwrSeqSignalDict = {'power_gate_enable': 8, 'BGR_enable': 0, 'LDO1p2V_enabled': 1, 'ADC_sup_buf_enable': 2,
@@ -150,6 +151,55 @@ def export_full_accuracy_data(self, dts_list):
     create_excel_file_for_chosen_func(self, 'pre_trim_full_data_gen1', final_pre_trim_dict_for_excel_gen1)
     create_excel_file_for_chosen_func(self, 'slope_offset_data_gen1', final_slope_offset_for_excel_gen1)
     create_excel_file_for_chosen_func(self, 'post_trim_full_data_gen1', final_post_trim_dict_for_excel_gen1)
+
+
+def export_full_cattrip_data(self, dts_list):
+    final_cat_pre_trim_dict_for_excel_gen2 = {}
+    final_cat_slope_offset_for_excel_gen2 = {}
+    final_cat_post_trim_dict_for_excel_gen2 = {}
+    final_cat_pre_trim_dict_for_excel_gen1 = {}
+    final_cat_slope_offset_for_excel_gen1 = {}
+    final_cat_post_trim_dict_for_excel_gen1 = {}
+    flag_gen2 = 1
+    flag_gen1 = 1
+    for dts in dts_list:
+        if DTS_dict[dts].gen == 2:
+            if flag_gen2:
+                final_cat_pre_trim_dict_for_excel_gen2 = DTS_dict[dts].cat_pre_trim_all_diodes_data
+                final_cat_slope_offset_for_excel_gen2 = DTS_dict[dts].cat_trim_all_diodes_data
+                final_cat_post_trim_dict_for_excel_gen2 = DTS_dict[dts].catblk_post_calib_data
+                flag_gen2 = 0
+                continue
+            final_cat_pre_trim_dict_for_excel_gen2 = merge_2_dictionaries_with_same_titles(
+                final_cat_pre_trim_dict_for_excel_gen2, DTS_dict[dts].cat_pre_trim_all_diodes_data)
+            final_cat_slope_offset_for_excel_gen2 = merge_2_dictionaries_with_same_titles(
+                final_cat_slope_offset_for_excel_gen2, DTS_dict[dts].cat_trim_all_diodes_data)
+            final_cat_post_trim_dict_for_excel_gen2 = merge_2_dictionaries_with_same_titles(
+                final_cat_post_trim_dict_for_excel_gen2, DTS_dict[dts].catblk_post_calib_data)
+
+        else:
+            if flag_gen1:
+                final_cat_pre_trim_dict_for_excel_gen1 = DTS_dict[dts].cat_pre_trim_all_diodes_data
+                final_cat_slope_offset_for_excel_gen1 = DTS_dict[dts].cat_trim_all_diodes_data
+                final_cat_post_trim_dict_for_excel_gen1 = DTS_dict[dts].catblk_post_calib_data
+                flag_gen1 = 0
+                continue
+            final_cat_pre_trim_dict_for_excel_gen1 = merge_2_dictionaries_with_same_titles(
+                final_cat_pre_trim_dict_for_excel_gen1,DTS_dict[dts].cat_pre_trim_all_diodes_data)
+            final_cat_slope_offset_for_excel_gen1 = merge_2_dictionaries_with_same_titles(
+                final_cat_slope_offset_for_excel_gen1, DTS_dict[dts].cat_trim_all_diodes_data)
+            final_cat_post_trim_dict_for_excel_gen1 = merge_2_dictionaries_with_same_titles(
+                final_cat_post_trim_dict_for_excel_gen1, DTS_dict[dts].catblk_post_calib_data)
+
+    self.cat_pre_trim_all_diodes_data = final_cat_pre_trim_dict_for_excel_gen2
+    self.cat_trim_all_diodes_data = final_cat_slope_offset_for_excel_gen2
+    self.catblk_post_calib_data = final_cat_post_trim_dict_for_excel_gen2
+    create_excel_file_for_chosen_func(self, 'cat_pre_trim_full_data_gen2', final_cat_pre_trim_dict_for_excel_gen2)
+    create_excel_file_for_chosen_func(self, 'cat_slope_offset_data_gen2', final_cat_slope_offset_for_excel_gen2)
+    create_excel_file_for_chosen_func(self, 'cat_post_trim_full_data_gen2', final_cat_post_trim_dict_for_excel_gen2)
+    create_excel_file_for_chosen_func(self, 'cat_pre_trim_full_data_gen1', final_cat_pre_trim_dict_for_excel_gen1)
+    create_excel_file_for_chosen_func(self, 'cat_slope_offset_data_gen1', final_cat_slope_offset_for_excel_gen1)
+    create_excel_file_for_chosen_func(self, 'cat_post_trim_full_data_gen1', final_cat_post_trim_dict_for_excel_gen1)
 
 
 def create_excel_file_for_chosen_func(self, func_name, dict_for_excel):

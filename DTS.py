@@ -23,10 +23,14 @@ class DTS:
     pre_trim_all_diodes_data = {}
     slope_offset_all_diodes_data = {}
     post_trim_all_diodes_data = {}
+    cat_pre_trim_all_diodes_data = {}
+    cat_trim_all_diodes_data = {}
+    catblk_post_calib_data = {}
     VBE_check_data = {}
     sleep_delay_check_data = {}
     bg_wait_time_data = {}
     ADCclkDivData = {}
+    adc_clk_all_data = {}
     DTD_NS_alert_direction_0_data ={}
     DTD_NS_alert_direction_1_data = {}
     DTD_sticky_alert_data = {}
@@ -157,8 +161,8 @@ class DTS:
 
     ## adc clock div test ##
     # Description:
-    def ADC_CLK_DIV_TEST(self, temperature):  # test 14
-        _DTS.ADC_CLK_DIV_TEST(self, temperature)
+    def ADC_CLK_DIV_TEST(self, temperature, diode):  # test 14
+        _DTS.ADC_CLK_DIV_TEST(self, temperature, diode)
 
     ## AON_OVRD_DTS_FUNC_CHECK ##
     def AON_OVRD_DTS_FUNC_CHECK(self):  # test 15

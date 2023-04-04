@@ -53,12 +53,18 @@ def __init__(self, name):
     self.name = name
     self.NumOfDiode = DiodeNum[name]
     self.VBE_check_data = {}
+    # accuracy data
     self.pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [], 'mean_raw_code': [],
                                       'min_raw_code': [], 'max_raw_code': []}
     self.slope_offset_all_diodes_data = {'dts': [], 'diode': [], 'slope': [], 'offset': []}
     self.post_trim_all_diodes_data = {'dts': [], 'OSR_mode': [], 'diode': [], 'temperature': [],
                                       'measured_temperature': [], 'error': []}
-
+    # cattrip data
+    self.cat_pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [], 'cattrip_code': []}
+    self.cat_trim_all_diodes_data = {'dts': [], 'diode': [], 'cat_slope': [], 'cat_offset': [], 'cattrip_code': []}
+    self.catblk_post_calib_data = {'dts': [], 'diode': [], 'temperature': [], 'cattrip_temperature': [],
+                                   'cat_alert': [], 'status': []}
+    # DTD alerts data
     self.DTD_NS_alert_direction_0_data = {'thresh_hold': [], 'temperature_alert_generated': [], 'diff_part_a': [],
                                           'pass_part_a': [], 'temperature_alert_gone': [], 'diff_part_b': [],
                                           'pass_part_b': []}
@@ -69,10 +75,13 @@ def __init__(self, name):
                                   'sticky_alert_part_a': [], 'pass_part_a': [],
                                   'thresh_hold_low': [], 'temperature_alert_generated_low': [], 'diff_part_b': [],
                                   'sticky_alert_part_b': [], 'pass_part_b': []}
+
     self.sleep_delay_check_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': [],
                                    'time_expected_dynamic': [], 'time_measured_dynamic': [], 'diff_dyn_time': []}
     self.bg_wait_time_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': []}
     self.ADCclkDivData = {25: [], 50: [], 100: []}
+    self.adc_clk_all_data = {'DTS_name': [], 'frequency': [], 'temperature': [],
+                             'measured_temperature': [], 'error': []}
     self.ana_pwr_seq_data = {'power_gate_enable': [], 'BGR_enable': [], 'LDO1p2V_enabled': [], 'ADC_sup_buf_enable': [],
                              'ADC_sup_buf_enable_delayed': []}
     self.CATBLK_VREF_VBE_VCOMP_data = {'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
@@ -446,12 +455,19 @@ def DTS_cat_2point_autotrim_check(self, temperature):  # test 8
         self.diodesList[diode].cat2PointsTrimData.append(curr)
         Asist_Func.dts_disable(self)
 
+        # save data for excel
+        self.cat_pre_trim_all_diodes_data['dts'].append(self.name)
+        self.cat_pre_trim_all_diodes_data['diode'].append(diode)
+        self.cat_pre_trim_all_diodes_data['temperature'].append(temperature)
+        self.cat_pre_trim_all_diodes_data['cattrip_code'].append(trimcode)
+
     print('finish 2point cattrip trim')
 
 
 ## Trim cat code for the diodea ##
 def DTS_cat_trim_rawcode(self, cattrip_temperature):
     #  calculation of slope and off set
+    self.cat_trim_all_diodes_data = {'dts': [], 'diode': [], 'cat_slope': [], 'cat_offset': [], 'cattrip_code': []}
     for diode in range(self.NumOfDiode):
         if self.diodesList[diode].valid:
             if self.gen == 2:
@@ -460,10 +476,18 @@ def DTS_cat_trim_rawcode(self, cattrip_temperature):
             else:
                 temperatures = [item[0] for item in self.diodesList[diode].catAutoTrimData]
                 rawcodes = [item[1] for item in self.diodesList[diode].catAutoTrimData]
+            rawcodes = [20, 40, 60, 80, 100]  ####################### for debug
             cat_slope, cat_offset = Asist_Func.calculate_slope_and_offset(rawcodes, temperatures)
             Asist_Func.insert_cat_slope_offset_to_diode(self, diode, cat_slope, cat_offset)
             cattripcode = Asist_Func.convert_temperature_to_rawcode(cattrip_temperature, cat_slope, cat_offset)  # check
             Asist_Func.insert_cattrip_code(self, cattripcode, diode)
+
+            # save data for excel
+            self.cat_trim_all_diodes_data['dts'].append(self.name)
+            self.cat_trim_all_diodes_data['diode'].append(diode)
+            self.cat_trim_all_diodes_data['cat_slope'].append(cat_slope)
+            self.cat_trim_all_diodes_data['cat_offset'].append(cat_offset)
+            self.cat_trim_all_diodes_data['cattrip_code'].append(cattripcode)
     print('finish cat trim')
 
 
@@ -506,11 +530,19 @@ def DTS_postcalib_catblk_trim_check(self, temperature_start_point, cattrip_tempe
                     status = True
 
             # add to our data set of diode
-            data = [temperature, catAllert, status]
+            data = [temperature, catAllert, status, cattrip_temperature]
             if cattrip_temperature in self.diodesList[diode].postCalibData:
                 self.diodesList[diode].postCalibData[cattrip_temperature].append(data)
             else:
                 self.diodesList[diode].postCalibData.update({cattrip_temperature: data})
+
+            # save data for excel
+            self.catblk_post_calib_data['dts'].append(self.name)
+            self.catblk_post_calib_data['diode'].append(diode)
+            self.catblk_post_calib_data['temperature'].append(temperature)
+            self.catblk_post_calib_data['cattrip_temperature'].append(cattrip_temperature)
+            self.catblk_post_calib_data['cat_alert'].append(catAllert)
+            self.catblk_post_calib_data['status'].append(status)
         Asist_Func.dts_disable(self)
 
 
@@ -520,13 +552,13 @@ def DTS_full_cattrip_calib_func(self):
         Asist_Func.temperature_change(temperature)
         DTS_cat_2point_autotrim_check(self, temperature)
     Asist_Func.temperature_change(25)
+    DTS_cat_trim_rawcode(self, 80)
     for cattrip_temperature in cattripTemperatureList:
         start_point_temperature = cattrip_temperature - 10
         Asist_Func.temperature_change(start_point_temperature)
-        DTS_cat_trim_rawcode(self, cattrip_temperature)
         DTS_postcalib_catblk_trim_check(self, start_point_temperature, cattrip_temperature)
     Asist_Func.temperature_change(25)
-
+    # DTS_cat_trim_rawcode(self, 125)
 
 ## BG wait time check ##
 def BG_WAIT_TIME_CHECK(self, waitDelay):  # test 11
@@ -568,14 +600,16 @@ def SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic):  # sleepTimeDynamic !=
     Asist_Func.program_digital_viewpin_o_digital_1(self, 0xc)
     print('Measure the time b/w falling edge and rising edge of the signal on o_digital_view[1] on scope')
     print('PASS - The duration b/w the falling an rising edge shall be equal to (sleepTime*2^12+1000)*10ns')
+    input('press any key to measure with the scope the dts: ' + self.name) + '\n'
     while True:
         Asist_Func.dts_enable(self)
-        print('measure with the scope')
-        repeat = input('press y for repeat the measurement, press n to continue the test')
+        repeat = input('press y for repeat the measurement, press n to continue the test \n')
         if repeat == 'n':
             break
         Asist_Func.dts_disable(self)
-    num = input('Enter the time you measured through the scope \n')
+    num = input('Enter the time you measured on the dts: ' + self.name +
+                ' through the scope \n For dynamic test: after inserting the time be ready to '
+                'capture the next measurement \n ')
     time_measured = float(num)
     time_expected = (sleepTime * pow(2, 12) + 1000) * 10e-9
     diff_time = abs(time_expected - time_measured)
@@ -588,7 +622,7 @@ def SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic):  # sleepTimeDynamic !=
         while True:
             Asist_Func.enable_dynamic_update(self)
             print('measure with the scope')
-            repeat = input('press y for repeat the measurement, press n to continue the test')
+            repeat = input('press y for repeat the measurement, press n to continue the test \n')
             if repeat == 'n':
                 break
             Asist_Func.disable_dynamic_update(self)
@@ -599,6 +633,10 @@ def SLEEP_DELAY_CHECK(self, sleepTime, sleepTimeDynamic):  # sleepTimeDynamic !=
         self.sleep_delay_check_data['time_expected_dynamic'].append(time_expected_dynamic)
         self.sleep_delay_check_data['time_measured_dynamic'].append(time_measured_dynamic)
         self.sleep_delay_check_data['diff_dyn_time'].append(diff_dyn_time)
+    else:  # in order to have same lengths of arrays
+        self.sleep_delay_check_data['time_expected_dynamic'].append('not_dynamic')
+        self.sleep_delay_check_data['time_measured_dynamic'].append('not_dynamic')
+        self.sleep_delay_check_data['diff_dyn_time'].append('not_dynamic')
 
 
 
@@ -617,13 +655,20 @@ def ADC_CLK_DIV_TEST(self, temperature, diode):  # test 14
     Asist_Func.program_bg_code(self)  # Program the BG code obtained from Step 2
     for freq in FrequenciesList:
         Asist_Func.update_chosen_mask(self, diode)
-        Asist_Func.program_adc_clock_freq(self, freq)
+        Asist_Func.program_adc_clock_freq(self, FrequenciesDict[freq])
         Asist_Func.dts_enable(self)
-        if Asist_Func.valid_diode_check(self, diode):  # check some diode you choose
+       # if Asist_Func.valid_diode_check(self, diode):  # check some diode you choose
+        if True:   ########################################## for debug
             measTemperature = Asist_Func.read_temperature_code(self, diode)
             tempError = temperature - measTemperature
             curr = [temperature, measTemperature, tempError]
             self.ADCclkDivData[freq].append(curr)
+            # save data for excel
+            self.adc_clk_all_data['DTS_name'].append(self.name)
+            self.adc_clk_all_data['frequency'].append(freq)
+            self.adc_clk_all_data['temperature'].append(temperature)
+            self.adc_clk_all_data['measured_temperature'].append(measTemperature)
+            self.adc_clk_all_data['error'].append(tempError)
         else:
             print('invalid diode')
         Asist_Func.dts_disable(self)
@@ -1064,15 +1109,15 @@ def default_setup_configuration(self):  # as the default values
     Asist_Func.dts_enable(self)
 
 
-def bgr_calib_step1_configuration(self):
+def bgr_calib_step1_configuration(self): #######add fusa enabe to step 1 and 2
     Asist_Func.ldo1p2_ext_vref_select(self, 1)  # Program 1.2VLDO reference selection mux to take lvrref as ref voltage
-    Asist_Func.ldo1p2_vref_range_select(self, 6)
+    Asist_Func.ldo1p2_vref_range_select(self, 6)  ############# need to be modfied to 100
     Asist_Func.ldo1p2_out_sel(self, 2)  # Program 1.2VLDO resistance divider to take lvrref of 0.93V as input ref vol
     Asist_Func.lvrrref_en(self)  # Enable for external reference
     Asist_Func.adcdfxextvref_select(self, 0)
     Asist_Func.adc_vref_select(self, 15)  # Program ADC external reference mux to select lvrref
-    Asist_Func.adc_vrefldo_ext_vref_sel(self, 1)  # Program vref_ldo output mux to sel external ref as adc ref voltage
-    Asist_Func.adc_supply_buf_vref_ext_select(self, 0)
+    Asist_Func.adc_vrefldo_ext_vref_sel(self, 1)  #
+    Asist_Func.adc_supply_buf_vref_ext_select(self, 0)  ############### need to be 1 check it
     Asist_Func.adc_supply_buf_out_select(self, 2)  # Program ADC supply buffer to select external input reference volt
 
     # apply external voltage
@@ -1093,7 +1138,7 @@ def bgr_calib_step2_configuration(self):
     Asist_Func.ldo1p2_ext_vref_select(self, 1)  # Program 1.2VLDO reference selection mux to take lvrref as ref voltage
     Asist_Func.ldo1p2_vref_range_select(self, 4)
     Asist_Func.ldo1p2_out_sel(self, 2) # Program 1.2VLDO resistance divider to take lvrref of 0.8V as input ref vol
-    Asist_Func.adc_vrefldo_ext_vref_sel(self, 1)  # Program vref_ldo to take internal BG reference as input
+    Asist_Func.adc_vrefldo_ext_vref_sel(self, 0)  # Program vref_ldo to take internal BG reference as input
     Asist_Func.vrefldo_vref_range_sel(self, 2)
     Asist_Func.adc_vrefldo_out_sel(self, 1)  # Program vrefldo resistance divider take 0.7V as input ref vol-functional
     Asist_Func.lvrrref_en(self)  # Enable for external reference
