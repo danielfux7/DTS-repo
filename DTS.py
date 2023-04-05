@@ -166,11 +166,11 @@ class DTS:
 
     ## AON_OVRD_DTS_FUNC_CHECK ##
     def AON_OVRD_DTS_FUNC_CHECK(self):  # test 15
-        AON_OVRD_DTS_FUNC_CHECK(self)
+        _DTS.AON_OVRD_DTS_FUNC_CHECK(self)
 
     ## DTD ns alert test ## test 16
-    def DTD_NS_ALERT_TEST(self, temperature, threshold, direction ):
-        _DTS.DTD_NS_ALERT_TEST(self, temperature, threshold, direction)
+    def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction):
+        _DTS.DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction)
 
     ## DTD sticky alert test ## test 17
     def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLimit):
@@ -197,8 +197,8 @@ class DTS:
         _DTS.DTS_RD_VBE_Check(self, temperature)
 
     ## ana pwr seq view ##
-    def ANA_PWR_SEQ_VIEW(self, viewpin1Signal):  # test 24
-        _DTS.ANA_PWR_SEQ_VIEW(self, viewpin1Signal)
+    def ANA_PWR_SEQ_VIEW(self):  # test 24
+        _DTS.ANA_PWR_SEQ_VIEW(self)
 
     ## CATBLK_VREF_VBE_VCOMP_CHECK ##
     def CATBLK_VREF_VBE_VCOMP_CHECK(self):

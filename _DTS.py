@@ -65,14 +65,14 @@ def __init__(self, name):
     self.catblk_post_calib_data = {'dts': [], 'diode': [], 'temperature': [], 'cattrip_temperature': [],
                                    'cat_alert': [], 'status': []}
     # DTD alerts data
-    self.DTD_NS_alert_direction_0_data = {'thresh_hold': [], 'temperature_alert_generated': [], 'diff_part_a': [],
-                                          'pass_part_a': [], 'temperature_alert_gone': [], 'diff_part_b': [],
-                                          'pass_part_b': []}
-    self.DTD_NS_alert_direction_1_data = {'thresh_hold': [], 'temperature_alert_generated': [], 'diff_part_a': [],
-                                          'pass_part_a': [], 'temperature_alert_gone': [], 'diff_part_b': [],
-                                          'pass_part_b': []}
-    self.DTD_sticky_alert_data = {'thresh_hold_high': [], 'temperature_alert_generated_high': [], 'diff_part_a': [],
-                                  'sticky_alert_part_a': [], 'pass_part_a': [],
+    self.DTD_NS_alert_direction_0_data = {'dts': [], 'thresh_hold': [], 'temperature_alert_generated': [],
+                                          'diff_part_a': [], 'pass_part_a': [], 'temperature_alert_gone': [],
+                                          'diff_part_b': [], 'pass_part_b': []}
+    self.DTD_NS_alert_direction_1_data = {'dts': [], 'thresh_hold': [], 'temperature_alert_generated': [],
+                                          'diff_part_a': [], 'pass_part_a': [], 'temperature_alert_gone': [],
+                                          'diff_part_b': [], 'pass_part_b': []}
+    self.DTD_sticky_alert_data = {'dts': [], 'thresh_hold_high': [], 'temperature_alert_generated_high': [],
+                                  'diff_part_a': [], 'sticky_alert_part_a': [], 'pass_part_a': [],
                                   'thresh_hold_low': [], 'temperature_alert_generated_low': [], 'diff_part_b': [],
                                   'sticky_alert_part_b': [], 'pass_part_b': []}
 
@@ -86,7 +86,7 @@ def __init__(self, name):
                              'ADC_sup_buf_enable_delayed': []}
     self.CATBLK_VREF_VBE_VCOMP_data = {'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
                                        'vref_min': [], 'vref_max': []}
-    self.fusa_check = {'step_1': -1, 'step_2': -1, 'step_3': -1}
+    self.fusa_check = {'dts': [], 'step_1': [], 'step_2': [], 'step_3': []}
     # for i in range(DiodeNum[name]):
     #     self.diodesList.append(Diode(i))
     self.diodesList = [Diode(i) for i in range(DiodeNum[name])]
@@ -680,7 +680,7 @@ def AON_OVRD_DTS_FUNC_CHECK(self):
     Asist_Func.aon_enable(self)
     for temperature in temperatureList:
         Asist_Func.temperature_change(temperature)
-        DTS_posttrim_temp_readout(self, temperature, 0)
+        DTS_posttrim_temp_readout(self, temperature)
     Asist_Func.aon_disable(self)
 
 
@@ -848,10 +848,13 @@ def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction
     Asist_Func.reinsert_calculated_existed_slope_offset(self, 0)
     Asist_Func.dts_enable(self)
     Asist_Func.dtd_ns_alert_threshold_direction_insert(self, threshold, direction)
+    self.DTD_NS_alert_direction_1_data['dts'].append(self.name)
+    self.DTD_NS_alert_direction_0_data['dts'].append(self.name)
     self.DTD_NS_alert_direction_1_data['thresh_hold'].append(threshold)
     self.DTD_NS_alert_direction_0_data['thresh_hold'].append(threshold)
     if direction:
-        if Asist_Func.valid_diode_check(self, 0):  # the diode num can be modified
+        #if Asist_Func.valid_diode_check(self, 0):  # the diode num can be modified
+        if True: ######################### for debug
             get_to_high_temperature_limit_direction_1(self, minTemperature,maxTemperature, threshold)
             if not Asist_Func.dtd_ns_alert(self):
                 print('There is no alert after crossing the threshold temperature')
@@ -875,7 +878,8 @@ def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction
             print('diode not valid')
 
     else:  # direction is 0, now we will check the the other direction, triggered when below threshold
-        if Asist_Func.valid_diode_check(self, 0):
+        #if Asist_Func.valid_diode_check(self, 0):
+        if True: ################################ for debug
             get_to_low_temperature_limit_direction_0(self, maxTemperature, minTemperature, threshold)
             if not Asist_Func.dtd_ns_alert(self):
                 print('There is no alert after crossing the threshold temperature')
@@ -909,6 +913,7 @@ def get_to_high_and_low_sticky_temperature_limit(self, maxTemperature, minTemper
     alert_flag = 0
     middle_temperature = (highThreshold - lowThreshold) / 2 + lowThreshold
     Asist_Func.temperature_change(middle_temperature)
+    self.DTD_sticky_alert_data['dts'].append(self.name)
     self.DTD_sticky_alert_data['thresh_hold_high'].append(highThreshold)
     self.DTD_sticky_alert_data['thresh_hold_low'].append(lowThreshold)
     while maxTemperature > Asist_Func.read_temperature_code(self, 0):
@@ -1010,14 +1015,15 @@ def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLi
     Asist_Func.dts_enable(self)
     Asist_Func.dtd_sticky_thr_high(self, highLimit)
     Asist_Func.dtd_sticky_thr_low(self, lowLimit)
-    if Asist_Func.valid_diode_check(self, 0):
+    #if Asist_Func.valid_diode_check(self, 0):
+    if True: ############################# for debug
         get_to_high_and_low_sticky_temperature_limit(self, maxTemperature, minTemperature, highLimit,lowLimit)
     else:
         print('diode not valid')
     Asist_Func.dts_disable(self)
 
 
-## bgcore bgg vtrim 700m ## for test 19, 20
+## bgcore vbg vtrim 700m ## for test 19, 20
 def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):
     Asist_Func.all_dts_disable()
     Asist_Func.set_any_bg_trim_code(self, bgtrimcode)
@@ -1075,11 +1081,11 @@ def ANA_PWR_SEQ_VIEW(self):  # test 24
         while True:
             input('press any key to disable the DTS')
             Asist_Func.dts_disable(self)
-            num = input('insert the time between the dts disable to the falling of the measured signal')
+            num = input('insert the time between the dts disable to the falling of the measured signal \n')
             time_passed = float(num)
             self.ana_pwr_seq_data[digital_signal].append(time_passed)
             Asist_Func.dts_enable(self)
-            repeat = input('press y to repeat the measurement or n to go to the next signal')
+            repeat = input('press y to repeat the measurement or n to go to the next signal \n')
             if repeat == 'n':
                 break
 
@@ -1222,6 +1228,8 @@ def DTS_RD_VBE_Check(self, temperature):
         Asist_Func.program_viewanasigsel(self, 6)  # Select the analog dft mux to out the RD VBE gen1
 
     # initialize
+    dts_name = []
+    temperatures = []
     diode_num = []
     voltage_measured = []
     rawcode = []
@@ -1235,6 +1243,8 @@ def DTS_RD_VBE_Check(self, temperature):
         Asist_Func.dts_enable(self)
         #if Asist_Func.valid_diode_check(self, diode):
         if True:  ###### for debug!!!!!
+            dts_name.append(self.name)
+            temperatures.append(temperature)
             diode_num.append(diode)
             rawcode.append(Asist_Func.rawcode_read(self))
             voltage_measured.append(Asist_Func.measure_analog_func(self,  0b11001001))
@@ -1247,12 +1257,14 @@ def DTS_RD_VBE_Check(self, temperature):
 
     # Add data to the DTS class
     if self.gen == 2:
-        self.VBE_check_data.update({'diode': diode_num, 'voltage_measured': voltage_measured, 'rawcode': rawcode,
+        self.VBE_check_data.update({'dts': dts_name, 'temperature': temperatures, 'diode': diode_num,
+                                    'voltage_measured': voltage_measured, 'rawcode': rawcode,
                                     'rawcode_calculation': rawcode_calculation, 'error': error})
         print(self.VBE_check_data)
     else:
-        self.VBE_check_data_gen1.update({'diode': diode_num, 'voltage_measured': voltage_measured, 'rawcode': rawcode,
-                                    'rawcode_calculation': rawcode_calculation, 'error': error})
+        self.VBE_check_data_gen1.update({'dts': dts_name, 'temperature': temperatures, 'diode': diode_num,
+                                         'voltage_measured': voltage_measured, 'rawcode': rawcode,
+                                         'rawcode_calculation': rawcode_calculation, 'error': error})
 
 
 
@@ -1401,9 +1413,9 @@ def bgr_fusa_check(self):
             test_results[i] = 1  # step passed
         else:
             test_results[i] = 0  # step no passed
-
-    self.fusa_check['step_1'] = test_results[0]
-    self.fusa_check['step_2'] = test_results[1]
-    self.fusa_check['step_3'] = test_results[2]
+    self.fusa_check['dts'].append(self.name)
+    self.fusa_check['step_1'].append(test_results[0])
+    self.fusa_check['step_2'].append(test_results[1])
+    self.fusa_check['step_3'].append(test_results[2])
 
     print(self.fusa_check)

@@ -53,7 +53,7 @@ def DTS_GEN1_TAP_DEFAULT_CHECK(self):
 
 
 def PWRON_DTS_RD_VBE_Check(self, temperature):
-    _DTS.DTS_RD_VBE_Check(sel, temperature)
+    _DTS.DTS_RD_VBE_Check(self, temperature)
     # num_of_diodes = 2
     # Asist_Func.dts_disable(self)
     # Asist_Func.program_viewanasigsel(self, 6)  # Select the analog dft mux to out the RD VBE
