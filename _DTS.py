@@ -55,7 +55,7 @@ def __init__(self, name):
     self.VBE_check_data = {}
     # accuracy data
     self.pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [], 'mean_raw_code': [],
-                                      'min_raw_code': [], 'max_raw_code': []}
+                                     'min_raw_code': [], 'max_raw_code': []}
     self.slope_offset_all_diodes_data = {'dts': [], 'diode': [], 'slope': [], 'offset': []}
     self.post_trim_all_diodes_data = {'dts': [], 'OSR_mode': [], 'diode': [], 'temperature': [],
                                       'measured_temperature': [], 'error': []}
@@ -64,6 +64,13 @@ def __init__(self, name):
     self.cat_trim_all_diodes_data = {'dts': [], 'diode': [], 'cat_slope': [], 'cat_offset': [], 'cattrip_code': []}
     self.catblk_post_calib_data = {'dts': [], 'diode': [], 'temperature': [], 'cattrip_temperature': [],
                                    'cat_alert': [], 'status': []}
+
+    # bg wait
+    self.bg_wait_code_data = self.pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [],
+                                                              'mean_raw_code': [], 'mean_raw_code_bg_wait': [],
+                                                              'min_raw_code': [], 'min_raw_code_bg_wait': [],
+                                                              'max_raw_code': [], 'max_raw_code_cg_wait': []}
+
     # DTD alerts data
     self.DTD_NS_alert_direction_0_data = {'dts': [], 'thresh_hold': [], 'temperature_alert_generated': [],
                                           'diff_part_a': [], 'pass_part_a': [], 'temperature_alert_gone': [],
@@ -339,9 +346,19 @@ def DTS_pretrim_rawcode_readout_particular_temp(self, temp):  # test 5
             meanCodeArr[diode] = sumCodeArr[diode] / MeasurementsNum
             diodeData = [self.name, diode, temp,  meanCodeArr[diode], minCodeArr[diode], maxCodeArr[diode]]
             self.diodesList[diode].pretrimData.append(diodeData)
+
+            # save data for excel
+            self.pre_trim_all_diodes_data['dts'].append(self.name)
+            self.pre_trim_all_diodes_data['diode'].append(diode)
+            self.pre_trim_all_diodes_data['temperature'].append(temp)
+            self.pre_trim_all_diodes_data['mean_raw_code'].append(meanCodeArr[diode])
+            self.pre_trim_all_diodes_data['min_raw_code'].append(minCodeArr[diode])
+            self.pre_trim_all_diodes_data['max_raw_code'].append(maxCodeArr[diode])
+
         else:
             meanCodeArr[i] = 'invalid diode'
             self.diodesList[i].valid = False
+
     print('finish pre trim temp / bgwait code check')
 
 
@@ -1368,12 +1385,12 @@ def DTS_full_accuracy_func(self):
         Asist_Func.temperature_change(temperature)
         DTS_pretrim_rawcode_readout_particular_temp(self, temperature)
 
-    # save the data of pre trim
-    pre_trim_titles = ['dts', 'diode', 'temperature', 'mean_raw_code', 'min_raw_code', 'max_raw_code']
-    for diode in range(self.NumOfDiode):
-        pre_trim_dict_for_diode = Asist_Func.convert_array_to_dict(self.diodesList[diode].pretrimData, pre_trim_titles)
-        self.pre_trim_all_diodes_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.pre_trim_all_diodes_data,
-                                                                                         pre_trim_dict_for_diode)
+    # # save the data of pre trim
+    # pre_trim_titles = ['dts', 'diode', 'temperature', 'mean_raw_code', 'min_raw_code', 'max_raw_code']
+    # for diode in range(self.NumOfDiode):
+    #     pre_trim_dict_for_diode = Asist_Func.convert_array_to_dict(self.diodesList[diode].pretrimData, pre_trim_titles)
+    #     self.pre_trim_all_diodes_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.pre_trim_all_diodes_data,
+    #                                                                                      pre_trim_dict_for_diode)
     Asist_Func.temperature_change(25)
     DTS_trim_rawcode(self)
     for temperature in temperatureList:

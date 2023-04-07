@@ -9,7 +9,7 @@ if __name__ == '__main__':
     print('Write in the list the DTSs you want to run, the default is all of them-13')
     dts_list = ListAllDTS  # can be modified
     dts_list = ['dts1', 'dts2', 'par_sa_pma0_core0_dts0']  #### for debug
-    num_of_tests = 24
+    num_of_tests = 25
     function_status = num_of_tests * [0]
     buf_en_arr = [0, 1]
     bg_wait_time_arr = [0]  # 0z1ff = 5.12 us
@@ -26,9 +26,10 @@ if __name__ == '__main__':
                     '12 - pre trim BGREF check \n 13 - ANA power up sequence view \n 14 - dithering \n '
                     '15 - RD VBE check \n 16 - CATBLK VREF VBE VCOMP check \n 17 - ADC linearity check \n '
                     '18 - AZ DC shift functionality check \n 19 - fusa check \n 20 - post trim BGREF check \n '
-                    '21 - default BGREF check \n 22 - cattrip alert check ext vbe \n 23 - fuses file \n')
+                    '21 - default BGREF check \n 22 - cattrip alert check ext vbe \n 23 - fuses file \n'
+                    '24 - bg wait raw code check \n')
         test_num = int(num)
-        if -1 < test_num < 20:  # check the name is correct
+        if -1 < test_num < 25:  # check the name is correct
             if function_status[test_num]:
                 ans = input('are you sure you want to repeat this test? press y/n \n')
                 if ans == 'n':
@@ -338,3 +339,41 @@ if __name__ == '__main__':
         ## fuses file ##
         elif test_num == 23:
             Asist_Func.export_all_fuses_from_unit_to_file()
+
+        ## bg wait code check ##
+        elif test_num == 24:
+            print('This test only for gen2')
+            bg_wait_code_dict = {'dts': [], 'diode': [], 'temperature': [], 'mean_raw_code': [],
+                                 'mean_raw_code_bg_wait': [], 'min_raw_code': [], 'min_raw_code_bg_wait': [],
+                                 'max_raw_code': [], 'max_raw_code_cg_wait': []}
+            pre_trim_dict = {'dts': [], 'diode': [], 'temperature': [], 'mean_raw_code': [],
+                             'min_raw_code': [], 'max_raw_code': []}
+            bg_wait_code_temperature_list = [10, 25, 50, 75, 100, 125]
+            bg_wait_time_list = [0x1ff]
+            for dts in dts_list:
+                if DTS_dict[dts].gen == 2:
+                    for temperature in bg_wait_code_temperature_list:
+                        Asist_Func.temperature_change(temperature)
+                        DTS_dict[dts].pretrim_rawcode_readout(temperature)
+                        pre_trim_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                            pre_trim_dict, DTS_dict[dts].pre_trim_all_diodes_data)
+            # save the data on bg
+            bg_wait_code_dict['dts'] = pre_trim_dict['dts']
+            bg_wait_code_dict['diode'] = pre_trim_dict['diode']
+            bg_wait_code_dict['temperature'] = pre_trim_dict['temperature']
+            bg_wait_code_dict['mean_raw_code'] = pre_trim_dict['mean_raw_code']
+            bg_wait_code_dict['min_raw_code'] = pre_trim_dict['dts']
+            bg_wait_code_dict['max_raw_code'] = pre_trim_dict['max_raw_code']
+
+            for dts in dts_list:
+                if DTS_dict[dts].gen == 2:
+                    for bg_wait in bg_wait_time_list:
+                        for temperature in bg_wait_code_temperature_list:
+                            temperature_change(temperature)
+                            Asist_Func.dts_disable(DTS_dict[dts])
+                            Asist_Func.program_bg_wait(DTS_dict[dts], bg_wait)
+                            DTS_dict[dts].pretrim_rawcode_readout(temperature)
+                            pre_trim_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                                pre_trim_dict, DTS_dict[dts].pre_trim_all_diodes_data)
+
+                        # save the rest of the data

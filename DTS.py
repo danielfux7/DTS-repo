@@ -28,6 +28,7 @@ class DTS:
     catblk_post_calib_data = {}
     VBE_check_data = {}
     sleep_delay_check_data = {}
+    bg_wait_code_data = {}
     bg_wait_time_data = {}
     ADCclkDivData = {}
     adc_clk_all_data = {}
