@@ -66,10 +66,10 @@ def __init__(self, name):
                                    'cat_alert': [], 'status': []}
 
     # bg wait
-    self.bg_wait_code_data = self.pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [],
-                                                              'mean_raw_code': [], 'mean_raw_code_bg_wait': [],
-                                                              'min_raw_code': [], 'min_raw_code_bg_wait': [],
-                                                              'max_raw_code': [], 'max_raw_code_cg_wait': []}
+    self.bg_wait_code_data = {'dts': [], 'diode': [], 'temperature': [],
+                              'mean_raw_code': [], 'mean_raw_code_bg_wait': [],
+                              'min_raw_code': [], 'min_raw_code_bg_wait': [],
+                              'max_raw_code': [], 'max_raw_code_bg_wait': []}
 
     # DTD alerts data
     self.DTD_NS_alert_direction_0_data = {'dts': [], 'thresh_hold': [], 'temperature_alert_generated': [],
@@ -1402,13 +1402,13 @@ def DTS_full_accuracy_func(self):
 ## Dithering ##
 def dithering(self):
     Asist_Func.dithering_enable(self)
-    DTS_full_accuracy_func(self, 0)
+    DTS_full_accuracy_func(self)
 
 
 ## AZ DC shift functionality check ##
 def AZ_DC_shift_func_check(self):
     Asist_Func.adc_az_offset_en(self)
-    DTS_full_accuracy_func(self, 0)
+    DTS_full_accuracy_func(self)
 
 
 ## fusa_check ##
