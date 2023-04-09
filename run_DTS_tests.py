@@ -229,10 +229,14 @@ if __name__ == '__main__':
         ## pre trim BGREF check ##    ######## need to finish the data saving
         elif test_num == 12:
             print('This test only for gen2')
+            pre_trim_bgref_dict = {'dts': [], 'tc': [], 'vtrim_700m': []}
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_PRETRIM_BGREF_CHECK()
-
+                    pre_trim_bgref_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                        pre_trim_bgref_dict, DTS_dict[dts].pre_trim_bg_ref_data)
+            create_excel_file_for_chosen_func(general_dts, 'pre_trim_bgref_check', pre_trim_bgref_dict)
+            general_dts.pre_trim_bg_ref_data = pre_trim_bgref_dict
 
         ## ANA power up sequence view ##
         elif test_num == 13:
@@ -247,7 +251,7 @@ if __name__ == '__main__':
             Asist_Func.create_excel_file_for_chosen_func(general_dts, 'ana_pwr_seq_view', ana_pwr_seq_dict)
             general_dts.ana_pwr_seq_data = ana_pwr_seq_dict
 
-        ## dithering ##     ######## need to finish
+        ## dithering ##
         elif test_num == 14:
             print('This test only for gen2')
             for dts in dts_list:
@@ -317,18 +321,27 @@ if __name__ == '__main__':
         ## post trim BGREF check ##
         elif test_num == 20:
             print('This test only for gen2')
+            post_trim_bgref_dict = {'dts': [], 'tc': [], 'vtrim_700m': []}
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_POSTTRIM_BGREF_CHECK()
+                    post_trim_bgref_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                        DTS_dict[dts].post_trim_bg_ref_data, post_trim_bgref_dict)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'post_trim_bgref_check', post_trim_bgref_dict)
+            general_dts.post_trim_bg_ref_data = post_trim_bgref_dict
 
 
         ## default trim BGREF check ##
         elif test_num == 21:
             print('This test only for gen2')
+            default_bgref_dict = {'dts': [], 'tc': [], 'vtrim_700m': []}
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_DEFAULT_BGREF_CHECK()
-
+                    default_bgref_dict = Asist_Func. merge_2_dictionaries_with_same_titles(
+                        default_bgref_dict, DTS_dict[dts].bg_ref_default_check_data)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'default_trim_bgref_check', default_bgref_dict)
+            general_dts.bg_ref_default_check_data = default_bgref_dict
 
         ## cattrip alert check ext vbe ##
         elif test_num == 22:

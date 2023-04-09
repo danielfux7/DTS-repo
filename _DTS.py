@@ -71,7 +71,13 @@ def __init__(self, name):
                               'min_raw_code': [], 'min_raw_code_bg_wait': [],
                               'max_raw_code': [], 'max_raw_code_bg_wait': []}
 
-    # DTD alerts data
+    # bgref pre post and default check
+    self.pre_trim_bg_ref_data = {'dts': [], 'tc': [], 'vtrim_700m': []}
+    self.post_trim_bg_ref_data = {'dts': [], 'tc': [], 'vtrim_700m': []}
+    self.bg_ref_default_check_data = {'dts': [], 'tc': [], 'vtrim_700m': []}
+
+
+    # DTD alerts
     self.DTD_NS_alert_direction_0_data = {'dts': [], 'thresh_hold': [], 'temperature_alert_generated': [],
                                           'diff_part_a': [], 'pass_part_a': [], 'temperature_alert_gone': [],
                                           'diff_part_b': [], 'pass_part_b': []}
@@ -1041,47 +1047,47 @@ def DTD_STICKY_ALERT_TEST(self, maxTemperature, minTemperature, lowLimit, highLi
 
 
 ## bgcore vbg vtrim 700m ## for test 19, 20
-def BGCORE_VBG_vtrim(self ,bgtrimcode, tc):
+def BGCORE_VBG_vtrim(self, bgtrimcode, tc):
+    vtrim_700m_dict = {'dts': [], 'tc': [], 'vtrim_700m': []}
+    vtrim_700m_dict['dts'].append(self.name)
+    vtrim_700m_dict['tc'].append(tc)
     Asist_Func.all_dts_disable()
     Asist_Func.set_any_bg_trim_code(self, bgtrimcode)
     if tc != -1:
         Asist_Func.set_any_tc(self, tc)
-    Asist_Func.program_viewanasigsel(self, int('0b10000111', 2))
-    Asist_Func.dts_enable(self)
-    print('Measure the voltage VBG through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and that press any key')
-    Asist_Func.measure_analog_func(self, 1)
-
-    Asist_Func.dts_disable(self)
     Asist_Func.program_viewanasigsel(self, int('0b11001111', 2))
     Asist_Func.dts_enable(self)
     print('Measure the vtrim_700m voltage through the analog DFT via bump xx_b_dts_anaview_0_dts_lv and press any key')
-    Asist_Func.measure_analog_func(self, 0)
-
-    if tc != -1:
-        Asist_Func.dts_disable(self)
-        Asist_Func.program_viewanasigsel(self, int('0b11000101', 2))
-        Asist_Func.dts_enable(self)
-        print('Measure the vbe_dummy voltage through the analog DFT via bump xx_b_dts_anaview_1_dts_lv and press any key')
-        Asist_Func.measure_analog_func(self, 1)
+    vtrim_700m = Asist_Func.measure_analog_func(self, 0)
+    vtrim_700m_dict['vtrim_700m'].append(vtrim_700m)
     Asist_Func.dts_disable(self)
+    return vtrim_700m_dict
 
 
 ## DTS pre trim bg ref check ## test 19
 def DTS_DEFAULT_BGREF_CHECK(self):
-    BGCORE_VBG_vtrim(self, int('0b10000', 2), 3)
+    temp_dict = BGCORE_VBG_vtrim(self, int('0b10000', 2), 3)
+    self.bg_ref_default_check_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.bg_ref_default_check_data,
+                                                                                      temp_dict)
 
 
 ## DTS pre trim bg ref check ## test 20
 def DTS_PRETRIM_BGREF_CHECK(self):
-    BGCORE_VBG_vtrim(self, 0, -1)
-    BGCORE_VBG_vtrim(self, int('0b11001', 2), -1)
-    BGCORE_VBG_vtrim(self, int('0b11111', 2), -1)
+    tc = Asist_Func.get_curr_tc(self)
+    temp_dict = BGCORE_VBG_vtrim(self, 0, tc)
+    self.pre_trim_bg_ref_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.pre_trim_bg_ref_data, temp_dict)
+    temp_dict = BGCORE_VBG_vtrim(self, int('0b11001', 2), tc)
+    self.pre_trim_bg_ref_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.pre_trim_bg_ref_data, temp_dict)
+    temp_dict = BGCORE_VBG_vtrim(self, int('0b11111', 2), tc)
+    self.pre_trim_bg_ref_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.pre_trim_bg_ref_data, temp_dict)
 
 
 def DTS_POSTTRIM_BGREF_CHECK(self):
     bgtrimcode = self.Step2TrimValue
     for tc in range(8):
-        BGCORE_VBG_vtrim(self, bgtrimcode, tc)
+        temp_dict = BGCORE_VBG_vtrim(self, bgtrimcode, tc)
+        self.post_trim_bg_ref_data = Asist_Func.merge_2_dictionaries_with_same_titles(self.post_trim_bg_ref_data,
+                                                                                      temp_dict)
 
 
 ## ana pwr seq view ##

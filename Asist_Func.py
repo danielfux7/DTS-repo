@@ -257,6 +257,14 @@ def set_any_tc(self, tc):
     exec(command)
 
 
+def get_curr_tc(self):
+    if self.name != 'atom_lpc':
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgrtc'
+    else:
+        command = 'cpu.cdie.taps.cdie_' + self.name + '.dtstapcfgfuse.bgrtc'
+    tc = eval(command)
+    return tc
+
 def set_any_bgradj(self, bgradj):
     if self.name != 'atom_lpc':
         command = 'cpu.cdie.taps.cdie_' + self.name + '.dtsfusecfg.bgradj =' + str(bgradj)

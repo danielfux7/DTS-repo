@@ -28,6 +28,9 @@ class DTS:
     catblk_post_calib_data = {}
     VBE_check_data = {}
     sleep_delay_check_data = {}
+    pre_trim_bg_ref_data = {}
+    post_trim_bg_ref_data = {}
+    bg_ref_default_check_data = {}
     bg_wait_code_data = {}
     bg_wait_time_data = {}
     ADCclkDivData = {}
@@ -188,6 +191,10 @@ class DTS:
     ## DTS pre trim bg ref check ## test 20
     def DTS_PRETRIM_BGREF_CHECK(self):
         _DTS.DTS_PRETRIM_BGREF_CHECK(self)
+
+    ## DTS post trim bgref check ##
+    def DTS_POSTTRIM_BGREF_CHECK(self):
+        _DTS.DTS_POSTTRIM_BGREF_CHECK(self)
 
     ## Dithering ## test 25
     def dithering(self):
