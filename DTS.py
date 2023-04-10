@@ -26,6 +26,7 @@ class DTS:
     cat_pre_trim_all_diodes_data = {}
     cat_trim_all_diodes_data = {}
     catblk_post_calib_data = {}
+    catblk_vref_vbe_vcomp_data = {}
     VBE_check_data = {}
     sleep_delay_check_data = {}
     pre_trim_bg_ref_data = {}
@@ -35,7 +36,8 @@ class DTS:
     bg_wait_time_data = {}
     ADCclkDivData = {}
     adc_clk_all_data = {}
-    DTD_NS_alert_direction_0_data ={}
+    sd_adc_linearity_check_data = {}
+    DTD_NS_alert_direction_0_data = {}
     DTD_NS_alert_direction_1_data = {}
     DTD_sticky_alert_data = {}
     ana_pwr_seq_data = {}

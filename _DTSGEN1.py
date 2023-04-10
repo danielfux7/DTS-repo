@@ -34,8 +34,12 @@ def __init__(self, name):
 
     self.VBE_check_data_gen1 = {}
     self.PWRON_BGCORE_VBE_VCCBGR_VBG_data = {'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
-    self.CATBLK_VREF_VBE_VCOMP_CHECK_data = {'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [], 'come_vref': []}
+    self.CATBLK_VREF_VBE_VCOMP_CHECK_data = {'dts': [], 'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [],
+                                             'come_vref': []}
     self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {'alert_voltage', 'vbe_100_deg', 'voltage_gap'}
+
+    self.sd_adc_linearity_check_data = {'dts': [], 'voltage_applied': [], 'rawcode': []}
+
     # for i in range(6):
     #     self.diodesList.append(Diode(i))
     self.diodesList = [Diode(i) for i in range(6)]
@@ -236,11 +240,16 @@ def DTS_ADC_Linearity_check(self):
     voltage_applied = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     data = []
     rawcode = []
-    for  i in range(len(voltage_applied)):
+    for i in range(len(voltage_applied)):
         Asist_Func.apply_voltage_i_ana_dfx_1(voltage_applied[i], 0)
         rawcode.append(Asist_Func.read_temperature_code(self, 0))
         data = [voltage_applied[i], rawcode[i]]
         self.adc_linearity_check.append(data)
+
+        # save data for excel
+        self.sd_adc_linearity_check_data['dts'].append(self.name)
+        self.sd_adc_linearity_check_data['voltage_applied'].append(voltage_applied[i])
+        self.sd_adc_linearity_check_data['rawcode'].append(rawcode[i])
 
     self.adc_slope, self.adc_offset = Asist_Func.calculate_slope_and_offset(voltage_applied,rawcode)
     print('slope: ' + str(self.adc_slope))
@@ -298,9 +307,10 @@ def DTS_full_cattrip_calib_func_gen1(self):
 
 def CATBLK_VREF_VBE_VCOMP_CHECK(self):
     Asist_Func.dts_disable(self)
-    cattrip_code = [0, 127]
+    cattrip_code = [0, 63]
     for code in cattrip_code:
         Asist_Func.insert_cattrip_code(self, code, 0)  # Set the cattrip trim code=6'b000000 for diode 0(can modify it)
+        self.CATBLK_VREF_VBE_VCOMP_CHECK_data['dts'].append(self.name)
         self.CATBLK_VREF_VBE_VCOMP_CHECK_data['cattrip_code'].append(code)
 
         Asist_Func.program_viewanasigsel(self, 4)  # Select the analog dft mux to out:cattrip comparator vref_min/_max

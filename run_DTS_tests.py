@@ -170,7 +170,7 @@ if __name__ == '__main__':
             Asist_Func.create_excel_file_for_chosen_func(general_dts, 'AON_override_dts_func_check', aon_override_dict)
 
 
-        ## DTD NS alert test ##  #### need to finish the excel data
+        ## DTD NS alert test ##
         elif test_num == 9:
             print('This test only for gen2')
             dtd_ns_alert_direction_0_dict = {'dts': [], 'thresh_hold': [], 'temperature_alert_generated': [],
@@ -198,7 +198,7 @@ if __name__ == '__main__':
                 general_dts, 'dtd_ns_alert_direction_1_test', dtd_ns_alert_direction_1_dict)
 
 
-        ## DTD sticky alert test ## #### need to finish the excel data
+        ## DTD sticky alert test ##
         elif test_num == 10:
             print('This test only for gen2')
             dtd_sticky_alert_dict = {'dts': [], 'thresh_hold_high': [], 'temperature_alert_generated_high': [],
@@ -226,7 +226,7 @@ if __name__ == '__main__':
                     #DTS_dict[dts].
 
 
-        ## pre trim BGREF check ##    ######## need to finish the data saving
+        ## pre trim BGREF check ##
         elif test_num == 12:
             print('This test only for gen2')
             pre_trim_bgref_dict = {'dts': [], 'tc': [], 'vtrim_700m': []}
@@ -280,22 +280,40 @@ if __name__ == '__main__':
             general_dts.VBE_check_data = VBE_check_dict
 
 
-        ## CATBLK VREF VBE VCOMP check ##    ######## need to finish
+        ## CATBLK VREF VBE VCOMP check ##
         elif test_num == 16:
+            catblk_dict_gen2 = {'dts': [], 'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
+                           'vref_min': [], 'vref_max': []}
+            catblk_dict_gen1 = {'dts': [], 'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [], 'come_vref': []}
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].CATBLK_VREF_VBE_VCOMP_CHECK()
+                    catblk_dict_gen2 = Asist_Func.merge_2_dictionaries_with_same_titles(
+                        catblk_dict_gen2, DTS_dict[dts].CATBLK_VREF_VBE_VCOMP_data)
+                else:
+                    DTS_dict[dts].CATBLK_VREF_VBE_VCOMP_CHECK()
+                    catblk_dict_gen1 = Asist_Func.merge_2_dictionaries_with_same_titles(
+                        catblk_dict_gen1, DTS_dict[dts].CATBLK_VREF_VBE_VCOMP_CHECK_data)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'catblk_vref_vbe_vcomp_gen2_check',
+                                                         catblk_dict_gen2)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'catblk_vref_vbe_vcomp_gen1_check',
+                                                         catblk_dict_gen1)
+            general_dts.CATBLK_VREF_VBE_VCOMP_data = catblk_dict_gen2
 
 
-        ## ADC linearity check ##    ######## need to finish for gen 1!
+        ## ADC linearity check ##
         elif test_num == 17:
+            sd_adc_linearity_dict = {'dts': [], 'voltage_applied': [], 'rawcode': []}
             voltage_step_size = 0.09
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
-                    DTS_dict[dts].DTS_SD_ADC_Linearity_check( voltage_step_size)
+                    DTS_dict[dts].DTS_SD_ADC_Linearity_check(voltage_step_size)
                 else:
                     DTS_dict[dts].DTS_ADC_Linearity_check()
-
+                sd_adc_linearity_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                    sd_adc_linearity_dict, DTS_dict[dts].sd_adc_linearity_check_data)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'sd_adc_linearity_check', sd_adc_linearity_dict)
+            general_dts.sd_adc_linearity_check_data = sd_adc_linearity_dict
 
         ## AZ DC shift functionality check ##
         elif test_num == 18:

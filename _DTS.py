@@ -65,6 +65,7 @@ def __init__(self, name):
     self.catblk_post_calib_data = {'dts': [], 'diode': [], 'temperature': [], 'cattrip_temperature': [],
                                    'cat_alert': [], 'status': []}
 
+
     # bg wait
     self.bg_wait_code_data = {'dts': [], 'diode': [], 'temperature': [],
                               'mean_raw_code': [], 'mean_raw_code_bg_wait': [],
@@ -92,12 +93,13 @@ def __init__(self, name):
     self.sleep_delay_check_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': [],
                                    'time_expected_dynamic': [], 'time_measured_dynamic': [], 'diff_dyn_time': []}
     self.bg_wait_time_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': []}
+    self.sd_adc_linearity_check_data = {'dts': [], 'voltage_applied': [], 'rawcode': []}
     self.ADCclkDivData = {25: [], 50: [], 100: []}
     self.adc_clk_all_data = {'DTS_name': [], 'frequency': [], 'temperature': [],
                              'measured_temperature': [], 'error': []}
     self.ana_pwr_seq_data = {'power_gate_enable': [], 'BGR_enable': [], 'LDO1p2V_enabled': [], 'ADC_sup_buf_enable': [],
                              'ADC_sup_buf_enable_delayed': []}
-    self.CATBLK_VREF_VBE_VCOMP_data = {'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
+    self.CATBLK_VREF_VBE_VCOMP_data = {'dts': [],'cattrip_code': [], 'comp_vref': [], 'comp_vbe': [],
                                        'vref_min': [], 'vref_max': []}
     self.fusa_check = {'dts': [], 'step_1': [], 'step_2': [], 'step_3': []}
     # for i in range(DiodeNum[name]):
@@ -712,7 +714,10 @@ def get_to_high_temperature_limit_direction_1(self, minTemperature, maxTemperatu
     curr = 0
     while maxTemperature > Asist_Func.read_temperature_code(self, 0):
         print('increasing the temperature by 1 degree')
-        Asist_Func.temperature_change(minTemperature + curr)
+        temperature = minTemperature + curr
+        if temperature > maxTemperature:
+            break
+        Asist_Func.temperature_change(temperature)
         currTemp = Asist_Func.read_temperature_code(self, 0)
         print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
@@ -736,7 +741,10 @@ def get_to_low_temperature_limit_direction_1(self, minTemperature, maxTemperatur
     curr = 0
     while minTemperature < Asist_Func.read_temperature_code(self, 0):
         print('decreasing the temperature by 1 degree')
-        Asist_Func.temperature_change(minTemperature - curr)
+        temperature = minTemperature - curr
+        if temperature < minTemperature:
+            break
+        Asist_Func.temperature_change(temperature)
         currTemp = Asist_Func.read_temperature_code(self, 0)
         print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
@@ -760,7 +768,10 @@ def get_to_high_temperature_limit_direction_0(self, minTemperature,maxTemperatur
     curr = 0
     while maxTemperature > Asist_Func.read_temperature_code(self, 0):
         print('increasing the temperature by 1 degree')
-        Asist_Func.temperature_change(minTemperature + curr)
+        temperature = minTemperature + curr
+        if temperature > maxTemperature:
+            break
+        Asist_Func.temperature_change(temperature)
         currTemp = Asist_Func.read_temperature_code(self, 0)
         print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
@@ -784,7 +795,10 @@ def get_to_low_temperature_limit_direction_0(self, minTemperature, maxTemperatur
     curr = 0
     while minTemperature < Asist_Func.read_temperature_code(self, 0):
         print('decreasing the temperature by 1 degree')
-        Asist_Func.temperature_change(maxTemperature - curr)
+        temperature = minTemperature - curr
+        if temperature < minTemperature:
+            break
+        Asist_Func.temperature_change(temperature)
         currTemp = Asist_Func.read_temperature_code(self, 0)
         print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
@@ -840,7 +854,7 @@ def DTD_NS_ALERT_TEST_before_update(self, maxTemperature, minTemperature, thresh
         else:  # direction is 0, now we will check the the other direction, triggered when below threshold
             if Asist_Func.valid_diode_check(self, diode):
                 pass_flag = 0
-                get_to_low_temperature_limit_direction_0(self, diode, minTemperature, threshold, direction )
+                get_to_low_temperature_limit_direction_0(self, diode, minTemperature, threshold, direction)
                 if not Asist_Func.dtd_ns_alert(self):
                     self.diodesList[diode].PassNsAlertTest = 0
                     print('There is no alert after crossing the threshold temperature')
@@ -871,11 +885,9 @@ def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction
     Asist_Func.reinsert_calculated_existed_slope_offset(self, 0)
     Asist_Func.dts_enable(self)
     Asist_Func.dtd_ns_alert_threshold_direction_insert(self, threshold, direction)
-    self.DTD_NS_alert_direction_1_data['dts'].append(self.name)
-    self.DTD_NS_alert_direction_0_data['dts'].append(self.name)
-    self.DTD_NS_alert_direction_1_data['thresh_hold'].append(threshold)
-    self.DTD_NS_alert_direction_0_data['thresh_hold'].append(threshold)
     if direction:
+        self.DTD_NS_alert_direction_1_data['dts'].append(self.name)
+        self.DTD_NS_alert_direction_1_data['thresh_hold'].append(threshold)
         #if Asist_Func.valid_diode_check(self, 0):  # the diode num can be modified
         if True: ######################### for debug
             get_to_high_temperature_limit_direction_1(self, minTemperature,maxTemperature, threshold)
@@ -901,6 +913,8 @@ def DTD_NS_ALERT_TEST(self, maxTemperature, minTemperature, threshold, direction
             print('diode not valid')
 
     else:  # direction is 0, now we will check the the other direction, triggered when below threshold
+        self.DTD_NS_alert_direction_0_data['dts'].append(self.name)
+        self.DTD_NS_alert_direction_0_data['thresh_hold'].append(threshold)
         #if Asist_Func.valid_diode_check(self, 0):
         if True: ################################ for debug
             get_to_low_temperature_limit_direction_0(self, maxTemperature, minTemperature, threshold)
@@ -941,7 +955,10 @@ def get_to_high_and_low_sticky_temperature_limit(self, maxTemperature, minTemper
     self.DTD_sticky_alert_data['thresh_hold_low'].append(lowThreshold)
     while maxTemperature > Asist_Func.read_temperature_code(self, 0):
         print('Increasing the temperature by step of one degree')
-        Asist_Func.temperature_change(middle_temperature + curr)
+        temperature = middle_temperature + curr
+        if temperature > maxTemperature:
+            break
+        Asist_Func.temperature_change(temperature)
         currTemp = Asist_Func.read_temperature_code(self, 0)
         print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
@@ -990,6 +1007,10 @@ def get_to_high_and_low_sticky_temperature_limit(self, maxTemperature, minTemper
     Asist_Func.clear_sticky_alert(self)
     while minTemperature < Asist_Func.read_temperature_code(self, 0):
         print('Decreasing the temperature by one degree')
+        temperature = middle_temperature - curr
+        if temperature < minTemperature:
+            break
+        Asist_Func.temperature_change(temperature)
         currTemp = Asist_Func.read_temperature_code(self, 0)
         print('the current temperature for the diode ' + str(0) + ' is:')
         print(currTemp)
@@ -1296,6 +1317,7 @@ def CATBLK_VREF_VBE_VCOMP_CHECK(self):
     codes = [0, 127]
     Asist_Func.dts_disable(self)
     for cattrip_code in codes:
+        self.CATBLK_VREF_VBE_VCOMP_data['dts'].append(self.name)
         self.CATBLK_VREF_VBE_VCOMP_data['cattrip_code'].append(cattrip_code)
         Asist_Func.insert_cattrip_code(self, cattrip_code, 0)
         Asist_Func.diode_sel_ovr_en(self)
@@ -1347,6 +1369,11 @@ def DTS_SD_ADC_Linearity_check(self, voltage_step_size):
         rawcode.append(Asist_Func.read_temperature_code(self, 0))
         data = [voltage_applied[i], rawcode[i]]
         self.adc_linearity_check.append(data)
+
+        # save data for excel
+        self.sd_adc_linearity_check_data['dts'].append(self.name)
+        self.sd_adc_linearity_check_data['voltage_applied'].append(voltage_applied[i])
+        self.sd_adc_linearity_check_data['rawcode'].append(rawcode[i])
 
     self.adc_slope, self.adc_offset = Asist_Func.calculate_slope_and_offset(voltage_applied, rawcode)
     print('slope: ' + str(self.adc_slope))
