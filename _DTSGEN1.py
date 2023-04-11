@@ -33,12 +33,13 @@ def __init__(self, name):
                                    'cat_alert': [], 'status': []}
 
     self.VBE_check_data_gen1 = {}
-    self.PWRON_BGCORE_VBE_VCCBGR_VBG_data = {'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
+    self.PWRON_BGCORE_VBE_VCCBGR_VBG_data = {'dts': [], 'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
     self.CATBLK_VREF_VBE_VCOMP_CHECK_data = {'dts': [], 'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [],
                                              'come_vref': []}
     self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {'alert_voltage', 'vbe_100_deg', 'voltage_gap'}
 
     self.sd_adc_linearity_check_data = {'dts': [], 'voltage_applied': [], 'rawcode': []}
+    self.vccbgr_check_data = {'dts': [], 'bgradj': [], 'bgrtc': [], 'vccbgr': []}
 
     # for i in range(6):
     #     self.diodesList.append(Diode(i))
@@ -72,9 +73,10 @@ def PWRON_DTS_RD_VBE_Check(self, temperature):
 
 
 def PWRON_BGCORE_VBE_VCCBGR_VBG(self, bgtrimcode):
+    self.PWRON_BGCORE_VBE_VCCBGR_VBG_data['dts'].append(self.name)
     Asist_Func.dts_disable(self)
     Asist_Func.set_any_bg_trim_code(self, bgtrimcode)  # set bgrtrimcode  = 6'b110010 (0x30) =32+16+2 =50 #### verify!!!
-    aelf.PWRON_BGCORE_VBE_VCCBGR_VBG_data['bgtrimcode'].append(bgtrimcode)
+    self.PWRON_BGCORE_VBE_VCCBGR_VBG_data['bgtrimcode'].append(bgtrimcode)
     Asist_Func.program_viewanasigsel(self, 1)  # Select the analog dft mux to out the BGCORE VBE
     Asist_Func.dts_enable(self)
     vbe1 = Asist_Func.measure_analog_func(self, 1)  # Measure BGCORE VBE1
@@ -104,7 +106,7 @@ def PWRON_CATBLK_VREF_VBE_VCOMP_CHECK(self): ## no need to use!
 
 def DTS_VCCBGR_CHECK(self):
     # measures = [bgadj , tc]
-    measures = [[0, 4], [0, 3], [0, 0], [1, 4], [1, 3], [1, 0], [2, 4], [2, 3], [2, 0], [3, 4], [3, 3], [3, 0]],
+    measures = [[0, 4], [0, 3], [0, 0], [1, 4], [1, 3], [1, 0], [2, 4], [2, 3], [2, 0], [3, 4], [3, 3], [3, 0]]
     Asist_Func.dts_disable(self)
     Asist_Func.program_viewanasigsel(self, 0)  # Select the analog dft mux to out the VCC_BGR from bgcore
     Asist_Func.dts_enable(self)
@@ -113,6 +115,14 @@ def DTS_VCCBGR_CHECK(self):
         Asist_Func.set_any_tc(self, measures[i][1])
         result = Asist_Func.measure_analog_func(self, 0) ### TBD in the measure analog func need to return the measure
         measures[i].append(result)
+
+        # save data for excel
+        self.vccbgr_check_data['dts'].append(self.name)
+        self.vccbgr_check_data['bgradj'].append(measures[i][0])
+        self.vccbgr_check_data['bgrtc'].append(measures[i][1])
+        self.vccbgr_check_data['vccbgr'].append(result)
+
+
     bgradj = [item[0] for item in measures]
     bgrtc = [item[1] for item in measures]
     result = [item[2] for item in measures]

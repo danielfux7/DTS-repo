@@ -228,14 +228,19 @@ if __name__ == '__main__':
 
         ## pre trim BGREF check ##
         elif test_num == 12:
-            print('This test only for gen2')
+            bgcore_vbe_vccbgr_gen1_dict = {'dts': [],'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
             pre_trim_bgref_dict = {'dts': [], 'tc': [], 'vtrim_700m': []}
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_PRETRIM_BGREF_CHECK()
                     pre_trim_bgref_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
                         pre_trim_bgref_dict, DTS_dict[dts].pre_trim_bg_ref_data)
+                else:
+                    DTS_dict[dts].PWRON_BGCORE_VBE_VCCBGR_VBG(26)
+                    bgcore_vbe_vccbgr_gen1_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                        bgcore_vbe_vccbgr_gen1_dict, DTS_dict[dts].PWRON_BGCORE_VBE_VCCBGR_VBG_data)
             create_excel_file_for_chosen_func(general_dts, 'pre_trim_bgref_check', pre_trim_bgref_dict)
+            create_excel_file_for_chosen_func(general_dts, 'pwron_bgcore_vbe_vccbgr', bgcore_vbe_vccbgr_gen1_dict)
             general_dts.pre_trim_bg_ref_data = pre_trim_bgref_dict
 
         ## ANA power up sequence view ##
@@ -338,14 +343,19 @@ if __name__ == '__main__':
 
         ## post trim BGREF check ##
         elif test_num == 20:
-            print('This test only for gen2')
             post_trim_bgref_dict = {'dts': [], 'tc': [], 'vtrim_700m': []}
+            vccbgr_gen1_dict = {'dts': [], 'bgradj': [], 'bgrtc': [], 'vccbgr': []}
             for dts in dts_list:
                 if DTS_dict[dts].gen == 2:
                     DTS_dict[dts].DTS_POSTTRIM_BGREF_CHECK()
                     post_trim_bgref_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
                         DTS_dict[dts].post_trim_bg_ref_data, post_trim_bgref_dict)
+                else:
+                    DTS_dict[dts].DTS_VCCBGR_CHECK()
+                    vccbgr_gen1_dict= Asist_Func.merge_2_dictionaries_with_same_titles(
+                        vccbgr_gen1_dict, DTS_dict[dts].vccbgr_check_data)
             Asist_Func.create_excel_file_for_chosen_func(general_dts, 'post_trim_bgref_check', post_trim_bgref_dict)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'vccbgr_check_gen1', vccbgr_gen1_dict)
             general_dts.post_trim_bg_ref_data = post_trim_bgref_dict
 
 

@@ -24,6 +24,7 @@ class DTSGEN1(DTS):
     PWRON_BGCORE_VBE_VCCBGR_VBG_data = {}
     CATBLK_VREF_VBE_VCOMP_CHECK_data = {}
     DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {}
+    vccbgr_check_data = {}
     sd_adc_linearity_check_data = {}
     vbe_diode0 = -1
 
