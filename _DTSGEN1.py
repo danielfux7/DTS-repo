@@ -36,7 +36,7 @@ def __init__(self, name):
     self.PWRON_BGCORE_VBE_VCCBGR_VBG_data = {'dts': [], 'bgtrimcode': [], 'BGCORE_VBE1': [], 'VCCBGR': []}
     self.CATBLK_VREF_VBE_VCOMP_CHECK_data = {'dts': [], 'cattrip_code': [], 'Vref_max': [], 'cattrip_comp': [],
                                              'come_vref': []}
-    self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {'alert_voltage', 'vbe_100_deg', 'voltage_gap'}
+    self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data = {'dts': [], 'alert_voltage': [], 'vbe_100_deg': [], 'voltage_gap': []}
 
     self.sd_adc_linearity_check_data = {'dts': [], 'voltage_applied': [], 'rawcode': []}
     self.vccbgr_check_data = {'dts': [], 'bgradj': [], 'bgrtc': [], 'vccbgr': []}
@@ -165,7 +165,8 @@ def DTS_PRETRIM_RAWCODE_READOUT(self, temperature, buf_en):
 
 def DTS_trim_gen1(self, buf_en):
     for diode in range(gen1_diode_num):
-        if Asist_Func.valid_diode_check(self,diode):
+        #if Asist_Func.valid_diode_check(self, diode):
+        if True: ######################## for debug
             if buf_en:  #
                 temperatures = [item[0] for item in self.diodesList[diode].pretrim_gen1_buf_en]
                 rawcodes = [item[1] for item in self.diodesList[diode].pretrim_gen1_buf_en]
@@ -349,7 +350,7 @@ def DTS_CATTRIP_ALERT_CHK_EXTVBE(self):
     Asist_Func.oneshot_disable(self)
     Asist_Func.update_diode_mask(self, 0)
     vbe1_100_deg = 0 ## TBD get the vbe voltage for 100C of diode 0
-    Asist_Func.insert_cattrip_code(self, cattrip_code, 0)
+    Asist_Func.insert_cattrip_code(self, cattrip_code, 0) ## TBD insert the cattrip code for 100 degrees
     Asist_Func.anadfxinen_select(self, 2)
     Asist_Func.program_digital_viewpin_o_digital_1(self, 14)
     Asist_Func.dts_enable(self)
@@ -357,10 +358,15 @@ def DTS_CATTRIP_ALERT_CHK_EXTVBE(self):
         Asist_Func.apply_voltage_i_ana_dfx_1(voltage, 0)
         ## TBD if thermtrip alert is generated: break and voltage and compare with the vbe we get form the RD VBE check
         if Asist_Func.measure_digital_func(self, 0xd):
+            self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['dts'].append(self.name)
             self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['alert_voltage'].append(voltage)
             self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['vbe_100_deg'].append(vbe1_100_deg)
             self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['voltage_gap'].append(voltage-vbe1_100_deg)
-            break
+            return
+    self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['dts'].append(self.name)
+    self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['alert_voltage'].append('not valid')
+    self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['vbe_100_deg'].append('not valid')
+    self.DTS_CATTRIP_ALERT_CHK_EXTVBE_data['voltage_gap'].append('not valid')
 
 
 def DTS_AVG_SUPLKG_CHECK_ONESHOTMODE(self):

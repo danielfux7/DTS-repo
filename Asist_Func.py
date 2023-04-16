@@ -73,6 +73,57 @@ OSRmodes_dict = {0: '256_avgdis', 1: '512_avgdis', 2: '1024_avgdis', 3: '2048_av
 Taps = ['dtsfusecfg', 'tapconfig', 'tapstatus', 'CRI', 'CRI_vs_TAPs', 'dtstapcfgfuse']
 
 
+def insert_per_die_fuses_to_classes(general_dts, dts_list):
+    # insert bgr trim code after bgr calibration
+    for i in range(len(general_dts.bgrtrimcode_data['DTS'])):
+        dts_name = general_dts.bgrtrimcode_data['DTS'][i]
+        if dts_name in dts_list:
+            bgrtrimcode = general_dts.bgrtrimcode_data['bgrtrimcode'][i]
+            DTS_dict[dts_name].Step2TrimValue = bgrtrimcode
+
+    # insert slope and offset gen 2
+    for i in range(len(general_dts.slope_offset_all_diodes_data['dts'])):
+        dts_name = general_dts.slope_offset_all_diodes_data['dts'][i]
+        if dts_name in dts_list:
+            diode = general_dts.slope_offset_all_diodes_data['diode'][i]
+            slope = general_dts.slope_offset_all_diodes_data['slope'][i]
+            offset = general_dts.slope_offset_all_diodes_data['offset'][i]
+            DTS_dict[dts_name].diodesList[diode].slope = slope
+            DTS_dict[dts_name].diodesList[diode].offset = offset
+
+    # insert slope and offset gen 1:
+    for i in range(len(general_dts.slope_offset_all_diodes_gen1_data['dts'])):
+        dts_name = general_dts.slope_offset_all_diodes_gen1_data['dts'][i]
+        if dts_name in dts_list:
+            if not general_dts.slope_offset_all_diodes_gen1_data['buf_en'][i]:
+                diode = general_dts.slope_offset_all_diodes_gen1_data['diode'][i]
+                slope = general_dts.slope_offset_all_diodes_gen1_data['slope'][i]
+                offset = general_dts.slope_offset_all_diodes_gen1_data['offset'][i]
+                DTS_dict[dts_name].diodesList[diode].slope = slope
+                DTS_dict[dts_name].diodesList[diode].offset = offset
+
+    # insert cattrip code and cat slope and cat offset gen2
+    for i in range(len(general_dts.cat_trim_all_diodes_data['dts'])):
+        dts_name = general_dts.cat_trim_all_diodes_data['dts'][i]
+        if dts_name in dts_list:
+            diode = general_dts.cat_trim_all_diodes_data['diode'][i]
+            cat_slope = general_dts.cat_trim_all_diodes_data['cat_slope'][i]
+            cat_offset = general_dts.cat_trim_all_diodes_data['cat_offset'][i]
+            DTS_dict[dts_name].diodesList[diode].catSlope = cat_slope
+            DTS_dict[dts_name].diodesList[diode].catOffset = cat_offset
+
+    # insert cattrip code and cat slope and cat offset gen1
+    for i in range(len(general_dts.cat_trim_all_diodes_gen1_data['dts'])):
+        dts_name = general_dts.cat_trim_all_diodes_gen1_data['dts'][i]
+        if dts_name in dts_list:
+            diode = general_dts.cat_trim_all_diodes_gen1_data['diode'][i]
+            cat_slope = general_dts.cat_trim_all_diodes_gen1_data['cat_slope'][i]
+            cat_offset = general_dts.cat_trim_all_diodes_gen1_data['cat_offset'][i]
+            DTS_dict[dts_name].diodesList[diode].catSlope = cat_slope
+            DTS_dict[dts_name].diodesList[diode].catOffset = cat_offset
+
+
+
 def create_new_path_for_func(path, func_name, dts_name):
     new_path = path + '\\' + str(func_name) + '_' + dts_name + '.xlsx'
     print(new_path)
@@ -150,6 +201,7 @@ def export_full_accuracy_data(self, dts_list, func_name):
         create_excel_file_for_chosen_func(self, 'post_trim_full_data_gen1', final_post_trim_dict_for_excel_gen1)
         self.pre_trim_all_diodes_data = final_pre_trim_dict_for_excel_gen2
         self.slope_offset_all_diodes_data = final_slope_offset_for_excel_gen2
+        self.slope_offset_all_diodes_gen1_data = final_slope_offset_for_excel_gen1
         self.post_trim_all_diodes_data = final_post_trim_dict_for_excel_gen2
         func_name = ''
 
@@ -201,6 +253,7 @@ def export_full_cattrip_data(self, dts_list):
 
     self.cat_pre_trim_all_diodes_data = final_cat_pre_trim_dict_for_excel_gen2
     self.cat_trim_all_diodes_data = final_cat_slope_offset_for_excel_gen2
+    self.cat_trim_all_diodes_gen1_data = final_cat_slope_offset_for_excel_gen1
     self.catblk_post_calib_data = final_cat_post_trim_dict_for_excel_gen2
     create_excel_file_for_chosen_func(self, 'cat_pre_trim_full_data_gen2', final_cat_pre_trim_dict_for_excel_gen2)
     create_excel_file_for_chosen_func(self, 'cat_slope_offset_data_gen2', final_cat_slope_offset_for_excel_gen2)

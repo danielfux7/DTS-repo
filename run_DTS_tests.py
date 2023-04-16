@@ -9,12 +9,17 @@ if __name__ == '__main__':
     print('Write in the list the DTSs you want to run, the default is all of them-13')
     dts_list = ListAllDTS  # can be modified
     dts_list = ['dts1', 'dts2', 'par_sa_pma0_core0_dts0']  #### for debug
-    num_of_tests = 25
+    num_of_tests = 26
     function_status = num_of_tests * [0]
     buf_en_arr = [0, 1]
     bg_wait_time_arr = [0]  # 0z1ff = 5.12 us
     Asist_Func.insert_calibrated_fuses_to_unit_from_file()
     general_dts = DTS('dts')
+    if os.path.exists('general_dts.pickle'):
+        # Load the object from the file using pickle
+        with open("general_dts.pickle", "rb") as f:
+            general_dts = pickle.load(f)
+
 
     # Choose what tests to run
     while 1:
@@ -27,9 +32,9 @@ if __name__ == '__main__':
                     '15 - RD VBE check \n 16 - CATBLK VREF VBE VCOMP check \n 17 - ADC linearity check \n '
                     '18 - AZ DC shift functionality check \n 19 - fusa check \n 20 - post trim BGREF check \n '
                     '21 - default BGREF check \n 22 - cattrip alert check ext vbe \n 23 - fuses file \n'
-                    ' 24 - bg wait raw code check \n')
+                    ' 24 - bg wait raw code check \n 25 - ADC_dynamic_check \n')
         test_num = int(num)
-        if -1 < test_num < 25:  # check the name is correct
+        if -1 < test_num < 26:  # check the name is correct
             if function_status[test_num]:
                 ans = input('are you sure you want to repeat this test? press y/n \n')
                 if ans == 'n':
@@ -51,6 +56,7 @@ if __name__ == '__main__':
                     DTS_dict[dts] = dts_gen1
                     gen = 1
                     #print(dts_gen1.name)
+            insert_per_die_fuses_to_classes(general_dts, dts_list)
 
         ## Fuses check ##
         elif test_num == 1:
@@ -76,10 +82,14 @@ if __name__ == '__main__':
                 DTS_dict[dts].bg_trim_step1()
                 DTS_dict[dts].bg_trim_step2()
                 bgrtrimcode_dict['DTS'].append(dts)
+                DTS_dict[dts].Step2TrimValue = 4 #################### for debug!!
                 bgrtrimcode_dict['bgrtrimcode'].append(DTS_dict[dts].Step2TrimValue)
             Asist_Func.write_calibrated_bgtrim_code_to_file()
             Asist_Func.create_excel_file_for_chosen_func(general_dts, 'BGR_calibration', bgrtrimcode_dict)
-
+            general_dts.bgrtrimcode_data = bgrtrimcode_dict
+            # Save the object to a file using pickle
+            with open("general_dts.pickle", "wb") as f:
+                pickle.dump(general_dts, f)
 
         ## pre and post trim ##
         elif test_num == 3:
@@ -91,6 +101,9 @@ if __name__ == '__main__':
                         DTS_dict[dts].DTS_full_accuracy_func_gen1(buf_en)
             Asist_Func.write_slope_offset_to_file()
             Asist_Func.export_full_accuracy_data(general_dts, dts_list, 0)
+            # Save the object to a file using pickle
+            with open("general_dts.pickle", "wb") as f:
+                pickle.dump(general_dts, f)
 
 
         ## cattrip calibration ##
@@ -102,6 +115,9 @@ if __name__ == '__main__':
                     DTS_dict[dts].DTS_full_cattrip_calib_func_gen1()
             Asist_Func.write_cattripcode_to_file()
             Asist_Func.export_full_cattrip_data(general_dts, dts_list)
+            # Save the object to a file using pickle
+            with open("general_dts.pickle", "wb") as f:
+                pickle.dump(general_dts, f)
 
 
         ## sleep delay check ##
@@ -374,9 +390,15 @@ if __name__ == '__main__':
         ## cattrip alert check ext vbe ##
         elif test_num == 22:
             print('This test only for gen1')
+            cattrip_alert_chk_extvbe_dict = {'dts': [], 'alert_voltage': [], 'vbe_100_deg': [], 'voltage_gap': []}
             for dts in dts_list:
                 if DTS_dict[dts].gen == 1:
                     DTS_dict[dts].DTS_CATTRIP_ALERT_CHK_EXTVBE()
+                    cattrip_alert_chk_extvbe_dict =Asist_Func.merge_2_dictionaries_with_same_titles(
+                        cattrip_alert_chk_extvbe_dict, DTS_dict[dts].DTS_CATTRIP_ALERT_CHK_EXTVBE_data)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'cattrip_alert_check_ext_vbe',
+                                                         cattrip_alert_chk_extvbe_dict)
+
 
         ## fuses file ##
         elif test_num == 23:
@@ -433,3 +455,16 @@ if __name__ == '__main__':
                 Asist_Func.create_excel_file_for_chosen_func(general_dts, 'bg_wait_code_check_' + str(bg_wait),
                                                              bg_wait_code_dict)
                 general_dts.bg_wait_code_data = bg_wait_code_dict
+
+        ## ADC_dynamic_check ##
+        elif test_num == 25:
+            print('This test only for gen2')
+            sd_adc_dynamic_dict = {'dts': [], 'frequency': [], 'elapsed_time': [], 'curr_voltage_applied': [],
+                                   'rawcode': []}
+            for dts in dts_list:
+                if DTS_dict[dts].gen == 2:
+                    DTS_dict[dts].DTS_SD_ADC_dynamic_check()
+                    sd_adc_dynamic_dict = Asist_Func.merge_2_dictionaries_with_same_titles(
+                        sd_adc_dynamic_dict, DTS_dict[dts].sd_adc_dynamic_check_data)
+            Asist_Func.create_excel_file_for_chosen_func(general_dts, 'sd_adc_dynamic_check', sd_adc_dynamic_dict)
+            general_dts.sd_adc_dynamic_check_data = sd_adc_dynamic_dict

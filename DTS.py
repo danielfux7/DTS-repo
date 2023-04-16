@@ -20,6 +20,7 @@ class DTS:
     adc_slope = 0
     adc_offset = 0
     gen = 2
+    bgrtrimcode_data = {}
     pre_trim_all_diodes_data = {}
     slope_offset_all_diodes_data = {}
     post_trim_all_diodes_data = {}
@@ -37,6 +38,7 @@ class DTS:
     ADCclkDivData = {}
     adc_clk_all_data = {}
     sd_adc_linearity_check_data = {}
+    sd_adc_dynamic_check_data = {}
     DTD_NS_alert_direction_0_data = {}
     DTD_NS_alert_direction_1_data = {}
     DTD_sticky_alert_data = {}
@@ -45,6 +47,9 @@ class DTS:
     fusa_check = {}
     path = r'C:\Users\daniel\results'
 
+    # save data for gen1 excel
+    slope_offset_all_diodes_gen1_data = {}
+    cat_trim_all_diodes_gen1_data = {}
 
     # methods
     def __init__(self, name):
@@ -218,10 +223,13 @@ class DTS:
     def DTS_SD_ADC_Linearity_check(self, voltage_step_size):
         _DTS.DTS_SD_ADC_Linearity_check(self, voltage_step_size)
 
+    ## ADC dynamic check ##
+    def DTS_SD_ADC_dynamic_check(self):
+        _DTS.DTS_SD_ADC_dynamic_check(self)
+
     ## fusa_check ##
     def bgr_fusa_check(self):
         _DTS.bgr_fusa_check(self)
-
 
 
 if __name__ == '__main__':

@@ -44,6 +44,12 @@ def __init__(self, name):
 
         if name == 'dts':
             self.name = name
+            self.bgrtrimcode_data = {'DTS': [], 'bgrtrimcode': []}
+            self.slope_offset_all_diodes_data = {'dts': [], 'diode': [], 'slope': [], 'offset': []}
+            self.cat_trim_all_diodes_data = {'dts': [], 'diode': [], 'cat_slope': [], 'cat_offset': [],
+                                             'cattrip_code': []}
+            self.slope_offset_all_diodes_gen1_data = {'dts': [], 'buf_en': [], 'diode': [], 'slope': [], 'offset': []}
+            self.cat_trim_all_diodes_gen1_data = {'dts': [], 'diode': [], 'cat_slope': [], 'cat_offset': [], 'cattrip_code': []}
             return
 
         if name in ListDTS:  # check the name is correct
@@ -52,6 +58,7 @@ def __init__(self, name):
 
     self.name = name
     self.NumOfDiode = DiodeNum[name]
+    self.bgrtrimcode_data = {'DTS': [], 'bgrtrimcode': []}
     self.VBE_check_data = {}
     # accuracy data
     self.pre_trim_all_diodes_data = {'dts': [], 'diode': [], 'temperature': [], 'mean_raw_code': [],
@@ -94,6 +101,8 @@ def __init__(self, name):
                                    'time_expected_dynamic': [], 'time_measured_dynamic': [], 'diff_dyn_time': []}
     self.bg_wait_time_data = {'DTS_name': [], 'time_expected': [], 'time_measured': [], 'diff_time': []}
     self.sd_adc_linearity_check_data = {'dts': [], 'voltage_applied': [], 'rawcode': []}
+    self.sd_adc_dynamic_check_data = {'dts': [], 'frequency': [], 'elapsed_time': [], 'curr_voltage_applied': [],
+                                      'rawcode': []}
     self.ADCclkDivData = {25: [], 50: [], 100: []}
     self.adc_clk_all_data = {'DTS_name': [], 'frequency': [], 'temperature': [],
                              'measured_temperature': [], 'error': []}
@@ -1381,8 +1390,8 @@ def DTS_SD_ADC_Linearity_check(self, voltage_step_size):
 
     ##### maybe export graph?
 
-## ADC Linearity check ##
-def DTS_SD_ADC_dynamic_check(self, a):
+## ADC dynamic check ##
+def DTS_SD_ADC_dynamic_check(self):
     frequency_list = [1e3, 10e3, 48e3]
     Asist_Func.dts_disable(self)
     Asist_Func.adcdfxextvref_select(self, 0)
@@ -1410,6 +1419,14 @@ def DTS_SD_ADC_dynamic_check(self, a):
             data = [freq, elapsed_time, curr_voltage_applied, rawcode]
             self.adc_dynamic_check.append(data)
             time.sleep(0.00001)
+
+            # save data in excel
+            self.sd_adc_dynamic_check_data['dts'].append(self.name)
+            self.sd_adc_dynamic_check_data['frequency'].append(freq)
+            self.sd_adc_dynamic_check_data['elapsed_time'].append(elapsed_time)
+            self.sd_adc_dynamic_check_data['curr_voltage_applied'].append(curr_voltage_applied)
+            self.sd_adc_dynamic_check_data['rawcode'].append(rawcode)
+
 
 
 ## DTS full accuracy function  ##
