@@ -123,7 +123,6 @@ def insert_per_die_fuses_to_classes(general_dts, dts_list):
             DTS_dict[dts_name].diodesList[diode].catOffset = cat_offset
 
 
-
 def create_new_path_for_func(path, func_name, dts_name):
     new_path = path + '\\' + str(func_name) + '_' + dts_name + '.xlsx'
     print(new_path)
