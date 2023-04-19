@@ -8,7 +8,7 @@ from BgwaitPostTrim import *
 
 def create_new_path(old_path, tapNum, dtsName):
     parser_path = old_path.split("\\")
-    parser_path[len(parser_path) -1] = Taps[int(tapNum)] + '_' + dtsName + '_out.xlsx'
+    parser_path[len(parser_path) - 1] = Taps[int(tapNum)] + '_' + dtsName + '_out.xlsx'
     new_path = parser_path[0] + '\\'
     for i in range(len(parser_path)-2):
         new_path += str(parser_path[i+1]) + '\\'

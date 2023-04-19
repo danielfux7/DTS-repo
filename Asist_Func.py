@@ -1,7 +1,6 @@
 import namednodes as _namednodes
 import pandas as pd
 import numpy as np
-from config import *
 import pickle
 import time
 import os
@@ -20,8 +19,8 @@ except:
 # Constants #
 Mega = 1000000
 ListDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1']
-listGEN1DTS=['par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
-             'par_sa_pma1_core1_dts0', 'atom_lpc']
+listGEN1DTS = ['par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
+               'par_sa_pma1_core1_dts0', 'atom_lpc']
 ListAllDTS = ['dts0_aon', 'dts1', 'dts2', 'dts3', 'dts_ccf0', 'dts_ccf1', 'dts_gt0', 'dts_gt1',
               'par_sa_pma0_core0_dts0', 'par_sa_pma0_core1_dts0', 'par_sa_pma1_core0_dts0',
               'par_sa_pma1_core1_dts0', 'atom_lpc']
@@ -266,6 +265,17 @@ def create_excel_file_for_chosen_func(self, func_name, dict_for_excel):
     path = create_new_path_for_func(self.path, func_name, self.name)
     df = pd.DataFrame.from_dict(dict_for_excel)
     df.to_excel(path)
+
+
+def create_new_path_for_excel(old_path, file_name):
+    parser_path = old_path.split("\\")
+    parser_path[len(parser_path) - 1] = file_name + '.xlsx'
+    new_path = parser_path[0] + '\\'
+    for i in range(len(parser_path)-2):
+        new_path += str(parser_path[i+1]) + '\\'
+    new_path += parser_path[len(parser_path)-1]
+    print(new_path)
+    return new_path
 
 
 def update_chosen_mask(self, mask):
